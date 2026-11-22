@@ -101,9 +101,9 @@ def og_image():
     icon = tile(300, rounded=True, ss=4).resize((300 * ss, 300 * ss), Image.LANCZOS)
     img.paste(icon, (90 * ss, 165 * ss), icon)
     d.text((440 * ss, 175 * ss), "Lampo", font=font(FONT_B, 120 * ss, "Bold"), fill=INK)
-    d.text((444 * ss, 330 * ss), "AI inference for agents,", font=font(FONT_R, 44 * ss, "Regular"), fill=INK)
+    d.text((444 * ss, 330 * ss), "Top AI models,", font=font(FONT_R, 44 * ss, "Regular"), fill=INK)
     d.text((444 * ss, 384 * ss), "paid in sats.", font=font(FONT_R, 44 * ss, "Regular"), fill=AMBER_TOP)
-    d.text((444 * ss, 470 * ss), "lampo.run  ·  pi402 seller  ·  L402 / MPP", font=font(FONT_M, 28 * ss, "Regular"), fill=MUTED)
+    d.text((444 * ss, 470 * ss), "No card  ·  no account  ·  lampo.run", font=font(FONT_M, 28 * ss, "Regular"), fill=MUTED)
     img.resize((W, H), Image.LANCZOS).save(ROOT / "site/og-image.png", optimize=True)
 
 

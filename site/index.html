@@ -6,14 +6,14 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="theme-color" content="#0e1116">
-<title>Lampo · AI inference for agents, paid in sats</title>
+<title>Lampo · Top AI models, paid in sats</title>
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://lampo.run/">
-<meta property="og:title" content="Lampo · AI inference for agents, paid in sats">
-<meta property="og:description" content="A public pi402 seller: your coding agent buys AI inference over Lightning. No account, no API key, no card.">
+<meta property="og:title" content="Lampo · Top AI models, paid in sats">
+<meta property="og:description" content="Kimi, GLM and DeepSeek through one OpenAI-compatible API, paid per token over Lightning. No card, no account, no API key. Built for agents that pay for themselves.">
 <meta property="og:image" content="https://lampo.run/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="description" content="A public pi402 seller: your coding agent buys AI inference over Lightning. No account, no API key, no card.">
+<meta name="description" content="Kimi, GLM and DeepSeek through one OpenAI-compatible API, paid per token over Lightning. No card, no account, no API key. Built for agents that pay for themselves.">
 <style>
 :root{--bg:#0b0d10;--card:#13171c;--ink:#e8eaed;--muted:#9aa3ad;--line:#232a31;--accent:#f7b500;--code:#0f1216}
 @media (prefers-color-scheme: light){:root{--bg:#fafaf7;--card:#ffffff;--ink:#16191d;--muted:#5d6670;--line:#e3e5e8;--accent:#b37f00;--code:#f3f4f1}}
@@ -52,13 +52,20 @@ a{color:var(--accent)}
 .cursor{display:inline-block;width:8px;height:1.05em;background:#c9d1d9;vertical-align:-3px;animation:blink 1s steps(1) infinite}
 @keyframes blink{50%{opacity:0}}
 @media (prefers-reduced-motion: reduce){.dot,.cursor{animation:none}}
+.cases{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin:26px 0 0}
+.case{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.case h3{margin:0 0 6px;font-size:1.02rem}
+.case p{margin:0;color:var(--muted);font-size:.95rem}
+details{border-bottom:1px solid var(--line);padding:10px 0}
+summary{cursor:pointer;font-weight:600}
+details p{margin:8px 0 2px;color:var(--muted)}
 </style>
 </head>
 <body>
 <main>
   <header class="top"><a class="brand" href="/"><img src="/logo.svg" alt="" width="36" height="36"><span>Lampo</span></a><span class="badge" id="net">Lightning · pi402 seller</span></header>
-  <h1>AI inference for agents, <span>paid in sats</span></h1>
-  <p class="lead">Lampo is a public seller for <a href="https://pi402.tech/">pi402</a>. Your <a href="https://pi.dev/">Pi</a> coding agent, or any agent with an L402 wallet, buys model tokens over Lightning, per use: no account, no API key, no card, no chargebacks.</p>
+  <h1>Top AI models, <span>paid in sats</span></h1>
+  <p class="lead">Kimi, GLM and DeepSeek through one OpenAI-compatible API. No card, no account, no API key: your code or your agent pays a Lightning invoice and gets the answer. From 1,000 sats for a million tokens.</p>
   <div class="live"><span class="dot"></span><span id="live-text">Live on Lightning mainnet</span></div>
 
   <div class="term" role="img" aria-label="Demo: an agent asks Lampo, pays 1,000 sats over Lightning and gets the answer">
@@ -66,7 +73,13 @@ a{color:var(--accent)}
     <div class="term-body" id="term"></div>
   </div>
 
-  <h2>Start in one minute</h2>
+  <div class="cases">
+    <div class="case"><h3>No card needed</h3><p>Build with strong models even where international cards are hard to get. Pay from any Lightning wallet, per use: no subscription, no signup, no chargebacks.</p></div>
+    <div class="case"><h3>Agents that pay for themselves</h3><p>An agent with a Lightning wallet buys its own compute: it gets a 402 with an invoice, pays within its limits and carries on. Nobody has to open an account for it.</p></div>
+    <div class="case"><h3>Private by default</h3><p>No email, no name, no card. We keep token counts and payments, never your prompts or answers.</p></div>
+  </div>
+
+  <h2>Start in one minute with the Pi coding agent</h2>
 <pre><code>pi install npm:@lightninglabs/pi-402
 
 export L402_PROXY_URL=https://lampo.run/v1
@@ -102,7 +115,7 @@ pi
     <li>The response streams back. The same credential keeps working until the bundle is used up.</li>
   </ol>
 
-  <h2 id="plain">Using another agent, or plain HTTP</h2>
+  <h2 id="plain">From your own code or agent (plain HTTP)</h2>
   <p>Any client that speaks L402, or the Payment HTTP scheme (MPP), can buy. Model ids are listed at <a href="/v1/models">/v1/models</a>.</p>
 <pre><code># 1. Ask: you get 402 with a Lightning invoice and a macaroon
 curl -si https://lampo.run/v1/chat/completions \
@@ -117,6 +130,14 @@ curl https://lampo.run/v1/chat/completions \
   -H 'Content-Type: application/json' \
   -H "Authorization: L402 $MACAROON:$PREIMAGE" \
   -d '{"model":"deepseek-ai/DeepSeek-V4-Flash-0731","stream":true,"messages":[{"role":"user","content":"hi"}]}'</code></pre>
+
+  <h2>Questions</h2>
+  <details><summary>Who runs Lampo?</summary><p>An independent operator in Italy (details in the <a href="/terms.html">terms</a>). The whole setup is open source: <a href="https://github.com/lamporun/lampo">github.com/lamporun/lampo</a>. Lampo is not affiliated with Lightning Labs, Baseten or the model makers.</p></details>
+  <details><summary>How much is 1,000 sats?</summary><p>Around $0.60 at today's bitcoin price. Prices in sats follow the bitcoin price and are recalculated every 10 minutes; the table above is always current.</p></details>
+  <details><summary>What if something fails after I pay?</summary><p>Your bundle is not lost: the same credential keeps working until its tokens are used up, so just retry. If something breaks on our side, write to <a href="mailto:contact@lampo.run">contact@lampo.run</a>.</p></details>
+  <details><summary>Do you keep my prompts?</summary><p>No. We store only token counts and payments. The models run on Baseten's servers in the US, which process the request to answer it.</p></details>
+  <details><summary>Which wallet do I need?</summary><p>For pi402, its built-in wallet: fund it from any Lightning wallet. From your own code, any Lightning wallet that gives you the payment preimage, or an L402/MPP client. Keep at least 2,000 sats in a Wavelength wallet.</p></details>
+  <details><summary>Where is it available?</summary><p>Everywhere Lightning works, except countries under comprehensive EU sanctions. Lampo is meant for developers and businesses.</p></details>
 
   <h2>Good to know</h2>
   <ul>
