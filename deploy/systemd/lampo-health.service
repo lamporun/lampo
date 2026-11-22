@@ -1,0 +1,6 @@
+[Unit]
+Description=Lampo - health check (services, invoice creation, website)
+
+[Service]
+Type=oneshot
+ExecStart=/opt/lampo/bin/health.sh

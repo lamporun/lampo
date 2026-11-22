@@ -1,0 +1,102 @@
+[
+ {
+  "t": 0.0,
+  "k": "cmd",
+  "s": "curl -i https://lampo.run/v1/chat/completions -d '{\"model\":\"deepseek-v4-flash\",\"messages\":[{\"role\":\"user\",\"content\":\"Write a haiku about an AI agent paying for its own thoughts in bitcoin.\"}]}'"
+ },
+ {
+  "t": 1.602,
+  "k": "out",
+  "s": "HTTP/2 402 Payment Required"
+ },
+ {
+  "t": 1.602,
+  "k": "out",
+  "s": "WWW-Authenticate: L402 macaroon=\"AgEEbHNhdAJC…\", invoice=\"lnbc10u1p4sxeedpp5…\""
+ },
+ {
+  "t": 1.602,
+  "k": "note",
+  "s": "# 1,000 sats buys 1,000,000 tokens"
+ },
+ {
+  "t": 1.602,
+  "k": "cmd",
+  "s": "wallet pay lnbc10u1p4sxeedpp5…"
+ },
+ {
+  "t": 10.817,
+  "k": "out",
+  "s": "⚡ paid 1,000 sats · preimage 7ca1ff7fa09a…"
+ },
+ {
+  "t": 10.817,
+  "k": "cmd",
+  "s": "curl https://lampo.run/v1/chat/completions -H \"Authorization: L402 $MACAROON:$PREIMAGE\" -d '{..., \"stream\": true}'"
+ },
+ {
+  "t": 13.665,
+  "k": "tok",
+  "s": "Sil"
+ },
+ {
+  "t": 13.677,
+  "k": "tok",
+  "s": "ent circuit"
+ },
+ {
+  "t": 13.689,
+  "k": "tok",
+  "s": " hum"
+ },
+ {
+  "t": 13.7,
+  "k": "tok",
+  "s": "s,\nSats spent"
+ },
+ {
+  "t": 13.712,
+  "k": "tok",
+  "s": " for"
+ },
+ {
+  "t": 13.729,
+  "k": "tok",
+  "s": " each thought"
+ },
+ {
+  "t": 13.737,
+  "k": "tok",
+  "s": "'s"
+ },
+ {
+  "t": 13.754,
+  "k": "tok",
+  "s": " expense"
+ },
+ {
+  "t": 13.761,
+  "k": "tok",
+  "s": ",\nThe"
+ },
+ {
+  "t": 13.773,
+  "k": "tok",
+  "s": " ledger breat"
+ },
+ {
+  "t": 13.783,
+  "k": "tok",
+  "s": "hes life"
+ },
+ {
+  "t": 13.796,
+  "k": "tok",
+  "s": "."
+ },
+ {
+  "t": 13.812,
+  "k": "ok",
+  "s": "✓ 344 tokens used · 999,656 left in this bundle"
+ }
+]

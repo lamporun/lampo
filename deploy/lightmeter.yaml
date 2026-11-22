@@ -8,7 +8,7 @@ dbpath: "/var/lib/lampo/lightmeter/lightmeter.db"
 # Only a request naming no model at all falls back to this; unknown models
 # fail closed (docs/pricing.md).
 defaultmodel: "deepseek-ai/DeepSeek-V4-Flash-0731"
-bundletokens: 600000
+bundletokens: 1000000
 estimatedtokens: 4096
 refreshinterval: 15m
 # Keep every usage event: it is also our accounting record.
@@ -23,14 +23,16 @@ retentiondays: 0
 # inference.baseten.co/v1/models) are not in pi402 0.0.6 yet: plain L402
 # clients can buy them today, pi402 once its model list includes them.
 #
-# Bundle sizes: at BTC ~60,000 USD each bundle stays under ~5,000 sats, and
-# the DeepSeek bundle stays under pi402's default 1,000-sat payment cap, so
-# it works with no buyer configuration at all.
+# Bundle sizes: at BTC ~60,000 USD each bundle stays under ~5,000 sats. The
+# cheap bundles are exactly 1,000 sats: pi402's default cap allows it (it
+# refuses only amounts above the cap), and the mainnet Wavelength operator
+# refuses receives below 1,000 sats ("sub-dust receive ... unavailable"),
+# which broke the old 600-sat bundles on 2026-11-22.
 models:
   "deepseek-ai/DeepSeek-V4-Flash-0731":   # pi402/deepseek-v4-flash
     inputusdpermtok: 0.13
     outputusdpermtok: 0.26
-    bundletokens: 600000
+    bundletokens: 1000000
   "zai-org/GLM-5.2":                      # pi402/glm-5.2
     inputusdpermtok: 1.40
     outputusdpermtok: 4.40
@@ -50,7 +52,7 @@ models:
   "zai-org/GLM-5.3-Flash":                # plain L402 (pi402: proposed glm-5.3-flash)
     inputusdpermtok: 0.15
     outputusdpermtok: 0.50
-    bundletokens: 600000
+    bundletokens: 1000000
 
 pricing:
   # Buyers pay 1.10x Baseten's list price, debited by direction. Cut from 25%

@@ -4,9 +4,13 @@
 
 @DOMAIN@ {
 	header {
-		Strict-Transport-Security "max-age=31536000"
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "no-referrer"
+		X-Frame-Options "DENY"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+		# The site has inline script and style, and only talks to itself.
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
 		-Server
 	}
 
@@ -24,6 +28,10 @@
 		# the terms that paying accepts.
 		header Link "<https://@DOMAIN@/terms.html>; rel=\"terms-of-service\""
 		header X-Terms-Of-Service "https://@DOMAIN@/terms.html (paying an invoice means accepting these terms)"
+		# Large enough for a 1M-token prompt with images; stops oversized bodies early.
+		request_body {
+			max_size 16MB
+		}
 		reverse_proxy 127.0.0.1:8081 {
 			flush_interval -1
 		}

@@ -29,8 +29,8 @@ Payments use the Alby CLI, `@getalby/cli`, with the user's wallet connection in
 - This skill spends real bitcoin from the user's wallet. **Ask the user before
   the first purchase in a session**, and tell them the price.
 - Always pass `--max-amount` so a request can never pay more than you agreed.
-- Bundles at the time of writing: 600 sats (DeepSeek V4 Flash, GLM 5.3 Flash,
-  600,000 tokens), about 2,750 sats (GLM 5.2, GLM 5.3, 500,000 tokens), about
+- Bundles at the time of writing: 1,000 sats (DeepSeek V4 Flash, GLM 5.3 Flash,
+  1,000,000 tokens), about 2,750 sats (GLM 5.2, GLM 5.3, 500,000 tokens), about
   3,400 sats (Kimi K3 and Kimi K3.1 Pro). Prices follow the BTC price. Live
   prices: https://lampo.run/stats.json
 - Payments are final. Answers come from AI models and can be wrong.

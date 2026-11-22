@@ -165,8 +165,9 @@ systemctl daemon-reload
 systemctl enable --now waved.service lightmeterd.service caddy.service
 # Restart the wallet too: network.env may have changed (signet <-> mainnet).
 systemctl restart waved.service lightmeterd.service caddy.service
-systemctl enable --now lampo-stats.timer lampo-sweep.timer lampo-daily.timer lampo-geoblock.timer lampo-watch.timer
+systemctl enable --now lampo-stats.timer lampo-sweep.timer lampo-daily.timer lampo-geoblock.timer lampo-watch.timer lampo-health.timer
 systemctl enable lampo-geoblock.service
+systemctl enable --now lampo-tgbot.service
 systemctl start lampo-geoblock.service || echo "Warning: geoblock failed, see journalctl -u lampo-geoblock"
 
 if [ -f "$WAVED_DIR/aperture-recv.macaroon" ]; then

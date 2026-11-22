@@ -61,7 +61,7 @@ a{color:var(--accent)}
   <p class="lead">Lampo is a public seller for <a href="https://pi402.tech/">pi402</a>. Your <a href="https://pi.dev/">Pi</a> coding agent, or any agent with an L402 wallet, buys model tokens over Lightning, per use: no account, no API key, no card, no chargebacks.</p>
   <div class="live"><span class="dot"></span><span id="live-text">Live on Lightning mainnet</span></div>
 
-  <div class="term" role="img" aria-label="Demo: an agent asks Lampo, pays 600 sats over Lightning and gets the answer">
+  <div class="term" role="img" aria-label="Demo: an agent asks Lampo, pays 1,000 sats over Lightning and gets the answer">
     <div class="term-bar"><i></i><i></i><i></i></div>
     <div class="term-body" id="term"></div>
   </div>
@@ -77,7 +77,7 @@ export PI402_MAX_SAT_PER_REQUEST=5000   # Kimi and GLM bundles cost more than th
 pi
 /fund 20000                    # pay the invoice from any Lightning wallet
 /model pi402/deepseek-v4-flash # or pi402/glm-5.2, pi402/kimi-k3.1-pro, pi402/kimi-k3</code></pre>
-  <p class="note">On mainnet the pi402 wallet needs your own password and a seed you back up; see the <a href="https://github.com/lightninglabs/pi-402/blob/main/INSTALL.md">pi-402 install guide</a>. DeepSeek V4 Flash bundles fit pi402's default limits, so it works without raising <code>PI402_MAX_SAT_PER_REQUEST</code>.</p>
+  <p class="note">On mainnet the pi402 wallet needs your own password and a seed you back up; see the <a href="https://github.com/lightninglabs/pi-402/blob/main/INSTALL.md">pi-402 install guide</a>. DeepSeek V4 Flash bundles fit pi402's default limits, so it works without raising <code>PI402_MAX_SAT_PER_REQUEST</code>. Keep at least 2,000 sats in the wallet: after a payment the Wavelength wallet must keep either zero or at least 1,000 sats of change.</p>
 
   <h2>Models and prices</h2>
   <p>One payment buys a bundle of tokens; each request is debited by the tokens it actually uses, input and output at their own rates. Prices follow the bitcoin price and include our <span id="margin">10%</span> margin over the upstream provider. Models without a pi402 name are sold to <a href="#plain">plain L402 clients</a> for now.</p>
@@ -128,7 +128,7 @@ curl https://lampo.run/v1/chat/completions \
   </ul>
 
   <footer>
-    <a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="mailto:contact@lampo.run">contact@lampo.run</a> · <a href="https://primal.net/p/npub1j7yzguz5g5ykrhxg57kkhutu89esmz52aknm9n0traswgwmvmlwqda8twt">Nostr</a> · <a href="/v1/models">/v1/models</a> · <a href="https://pi402.tech/">pi402</a>
+    <a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="mailto:contact@lampo.run">contact@lampo.run</a> · <a href="https://primal.net/p/npub1j7yzguz5g5ykrhxg57kkhutu89esmz52aknm9n0traswgwmvmlwqda8twt">Nostr</a> · <a href="https://x.com/lamporun">X</a> · <a href="https://github.com/lamporun/lampo">GitHub</a> · <a href="/v1/models">/v1/models</a> · <a href="https://pi402.tech/">pi402</a>
     <p style="margin-top:8px">Lampo is an independent project, not affiliated with Lightning Labs, Baseten or the model providers.</p>
   </footer>
 </main>
@@ -145,7 +145,7 @@ curl https://lampo.run/v1/chat/completions \
   var fmt = function(n){ return Number(n||0).toLocaleString('en-US'); };
 
   // Terminal demo: what an agent session looks like, with the live DeepSeek price.
-  var deep = {sats: 600, tokens: 600000};
+  var deep = {sats: 1000, tokens: 1000000};
   function demo(){
     var el = document.getElementById('term'); if (!el) return;
     var left = deep.tokens - 219;

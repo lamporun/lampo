@@ -29,11 +29,13 @@ Edit `site/` (operator details, terms, privacy) and `deploy/lightmeter.yaml` (mo
 
 ## Lessons from running it
 
-- **pi402's default cap is 1,000 sats per payment.** Size at least one bundle below it, or buyers must raise `PI402_MAX_SAT_PER_REQUEST`.
-- **Wavelength refuses sends and change below 1,000 sats** unless you allow credit, and a mainnet account holds at most 300,000 sats: sweep often, from confirmed coins.
-- **Rates are whole msat per token.** At BTC ≈ $60k that is a floor of about $0.61 per million tokens, so very cheap models are sold above their real price.
-- **Cached input tokens are billed as fresh input** by today's metering, although upstreams charge a fraction for them.
+- **Keep every bundle at 1,000 sats or more, and make the cheapest one exactly 1,000.** On mainnet the Wavelength operator refuses to *receive* less than 1,000 sats ("sub-dust receive via the operator credit subsystem is unavailable"): our 600-sat bundles silently failed for hours on launch day. pi402's default cap is 1,000 sats per payment and refuses only amounts *above* it, so a 1,000-sat bundle works with zero buyer configuration.
+- **Buyers need at least 2,000 sats in their wallet.** Wavelength refuses a payment that would leave between 1 and 999 sats of change, so paying a 1,000-sat bundle from a 1,500-sat balance fails.
+- **Sends and change below 1,000 sats need credit, and a mainnet account holds at most 300,000 sats:** sweep often, from confirmed coins, keeping at least 2,000 sats.
+- **Rates are whole msat per token.** At BTC ≈ $60k that is a floor of about $0.61 per million tokens, so very cheap models are sold above their real price ([aperture#344](https://github.com/lightninglabs/aperture/issues/344)).
+- **Cached input tokens are billed as fresh input** by today's metering, although upstreams charge a fraction for them (same issue).
 - **Unknown model ids fail closed** (HTTP 500): no free service, but publish your model ids (`/v1/models`, `llms.txt`).
 - **Streaming needs an unbuffered proxy** (`flush_interval -1` in Caddy).
+- **Watch invoice creation, not just uptime.** `scripts/health.sh` alerts when Aperture can't mint invoices: the site can be up while nobody is able to pay.
 
 Contributions upstream: `contrib/` holds the patches we sent to pi-402 and pi402.tech.

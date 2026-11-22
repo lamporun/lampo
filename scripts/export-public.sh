@@ -7,11 +7,11 @@ out="${1:?usage: export-public.sh OUTPUT_DIR}"
 mkdir -p "$out"
 cd "$(dirname "$0")/.."
 git archive HEAD | tar -x -C "$out"
-for p in docs/RUNBOOK.md docs/email-baseten.md docs/listings.md docs/launch-posts.md docs/upstream.md docs/opensats.md docs/nostr; do
+for p in agent docs/x-replies.md docs/show-hn.md docs/RUNBOOK.md docs/email-baseten.md docs/listings.md docs/launch-posts.md docs/upstream.md docs/opensats.md docs/nostr; do
   [ ! -e "$out/$p" ] || rm -r -- "${out:?}/$p"
 done
 cd "$out"
-if grep -rIl --exclude=export-public.sh -E 'nsec1[0-9a-z]{20,}|PRIVATE KEY-----|@gmail\.com|bot[0-9]{8,}:' . ; then
+if grep -rIl --exclude=export-public.sh -E 'nsec1[0-9a-z]{20,}|PRIVATE KEY-----|@gmail\.com|bot[0-9]{8,}:|/home/[a-z]+/' . ; then
   echo "Refusing: something that looks private is in the export."; exit 1
 fi
 git init -q -b main

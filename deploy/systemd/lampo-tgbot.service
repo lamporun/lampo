@@ -1,0 +1,19 @@
+[Unit]
+Description=Lampo - Telegram bot (records the operator's approvals for the assistant)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=lampo
+Group=lampo
+ExecStart=/usr/bin/python3 /opt/lampo/bin/tg-bot.py
+Restart=always
+RestartSec=10
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/var/lib/lampo
+
+[Install]
+WantedBy=multi-user.target

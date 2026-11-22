@@ -10,12 +10,12 @@
 - Streaming (`"stream": true`) is supported. Usage is debited per request: input and output tokens at their own rates.
 
 ## Models
-- `deepseek-ai/DeepSeek-V4-Flash-0731` (pi402: `pi402/deepseek-v4-flash`): the cheapest bundle, 600,000 tokens; it fits pi402's default 1,000-sat limit.
+- `deepseek-ai/DeepSeek-V4-Flash-0731` (pi402: `pi402/deepseek-v4-flash`): the cheapest bundle: 1,000,000 tokens for 1,000 sats, which is exactly pi402's default per-payment limit.
 - `zai-org/GLM-5.2` (pi402: `pi402/glm-5.2`)
 - `moonshotai/Kimi-K3.1-Pro` (pi402: `pi402/kimi-k3.1-pro`)
 - `moonshotai/Kimi-K3` (pi402: `pi402/kimi-k3`)
 - `zai-org/GLM-5.3` (plain L402 / MPP; not in pi402 yet)
-- `zai-org/GLM-5.3-Flash` (plain L402 / MPP; not in pi402 yet): bundle of 600,000 tokens, like DeepSeek V4 Flash
+- `zai-org/GLM-5.3-Flash` (plain L402 / MPP; not in pi402 yet): 1,000,000 tokens for 1,000 sats, like DeepSeek V4 Flash
 
 ## Links
 - [Live prices and bundle sizes (JSON)](https://lampo.run/stats.json)
@@ -27,5 +27,6 @@
 
 ## Notes
 - pi402 setup: `export L402_PROXY_URL=https://lampo.run/v1`, `export PI402_NETWORK=mainnet`, `export PI402_MAX_SAT_PER_REQUEST=5000`.
+- Wallet note (Wavelength, used by pi402): a payment fails if it would leave between 1 and 999 sats of change, so keep at least 2,000 sats in the wallet.
 - Not available from countries under comprehensive EU sanctions.
 - Contact: contact@lampo.run · Nostr: lampo@lampo.run
