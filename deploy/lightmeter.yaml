@@ -1,0 +1,71 @@
+# Lampo - Lightmeter: prices, prepaid token bundles and the usage ledger.
+# Template rendered by deploy/setup.sh into /etc/lampo/lightmeter.yaml.
+# Docs: lightmeter/README.md, docs/pricing.md, docs/operations.md.
+
+listenaddr: "127.0.0.1:10020"
+dbpath: "/var/lib/lampo/lightmeter/lightmeter.db"
+
+# Only a request naming no model at all falls back to this; unknown models
+# fail closed (docs/pricing.md).
+defaultmodel: "deepseek-ai/DeepSeek-V4-Flash-0731"
+bundletokens: 600000
+estimatedtokens: 4096
+refreshinterval: 15m
+# Keep every usage event: it is also our accounting record.
+retentiondays: 0
+
+# Upstream list prices: Baseten Model APIs, USD per 1M tokens, checked
+# 2026-11-21 on baseten.co/pricing. Re-check before changing anything.
+#
+# Keys are the exact slugs the pi402 buyer sends (pi-402 src/provider.ts,
+# BASETEN_MODEL_SLUGS). GLM-4.7 and GLM-5 are no longer offered by Baseten,
+# so they are not sold. GLM-5.3 and GLM-5.3 Flash (checked 2026-11-22 on
+# inference.baseten.co/v1/models) are not in pi402 0.0.6 yet: plain L402
+# clients can buy them today, pi402 once its model list includes them.
+#
+# Bundle sizes: at BTC ~60,000 USD each bundle stays under ~5,000 sats, and
+# the DeepSeek bundle stays under pi402's default 1,000-sat payment cap, so
+# it works with no buyer configuration at all.
+models:
+  "deepseek-ai/DeepSeek-V4-Flash-0731":   # pi402/deepseek-v4-flash
+    inputusdpermtok: 0.13
+    outputusdpermtok: 0.26
+    bundletokens: 600000
+  "zai-org/GLM-5.2":                      # pi402/glm-5.2
+    inputusdpermtok: 1.40
+    outputusdpermtok: 4.40
+    bundletokens: 500000
+  "moonshotai/Kimi-K3.1-Pro":             # pi402/kimi-k3.1-pro
+    inputusdpermtok: 2.00
+    outputusdpermtok: 10.00
+    bundletokens: 300000
+  "moonshotai/Kimi-K3":                   # pi402/kimi-k3
+    inputusdpermtok: 3.00
+    outputusdpermtok: 15.00
+    bundletokens: 200000
+  "zai-org/GLM-5.3":                      # plain L402 (pi402: proposed glm-5.3)
+    inputusdpermtok: 1.40
+    outputusdpermtok: 4.40
+    bundletokens: 500000
+  "zai-org/GLM-5.3-Flash":                # plain L402 (pi402: proposed glm-5.3-flash)
+    inputusdpermtok: 0.15
+    outputusdpermtok: 0.50
+    bundletokens: 600000
+
+pricing:
+  # Buyers pay 1.10x Baseten's list price, debited by direction. Cut from 25%
+  # on 2026-11-22 to get closer to PPQ.ai. The real margin is higher: rates
+  # round up to whole msat, and cached input tokens cost us a tenth of the
+  # list price while Lightmeter bills them at the full input rate.
+  marginpercent: 10
+  btcusd:
+    # Zero = Coinbase spot, refreshed every refreshinterval.
+    staticrate: 0
+
+# Local only: GET /recon with the bearer token compares metered usage with
+# provider billing. Never exposed through Caddy.
+webhook:
+  listenaddr: "127.0.0.1:10021"
+  secret: "@WEBHOOK_SECRET@"
+  path: "/webhooks/baseten"
+  recontoken: "@RECON_TOKEN@"

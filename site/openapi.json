@@ -1,0 +1,54 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Lampo",
+    "version": "1.0.0",
+    "summary": "AI inference for agents, paid in sats over Lightning (L402 / MPP).",
+    "description": "OpenAI-compatible chat completions. Unauthenticated requests receive 402 Payment Required with a Lightning invoice for a prepaid token bundle; repeat the request with the L402 credential (macaroon:preimage) until the bundle is used up. Prices: https://lampo.run/stats.json",
+    "termsOfService": "https://lampo.run/terms.html",
+    "contact": {"name": "Lampo", "email": "contact@lampo.run", "url": "https://lampo.run"}
+  },
+  "servers": [{"url": "https://lampo.run/v1"}],
+  "paths": {
+    "/chat/completions": {
+      "post": {
+        "summary": "Create a chat completion (paid)",
+        "security": [{"L402": []}, {"Payment": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["model", "messages"],
+                "properties": {
+                  "model": {"type": "string", "enum": ["deepseek-ai/DeepSeek-V4-Flash-0731", "zai-org/GLM-5.2", "moonshotai/Kimi-K3.1-Pro", "moonshotai/Kimi-K3", "zai-org/GLM-5.3", "zai-org/GLM-5.3-Flash"]},
+                  "messages": {"type": "array", "items": {"type": "object"}},
+                  "max_tokens": {"type": "integer"},
+                  "stream": {"type": "boolean"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Completion (JSON, or server-sent events when stream is true)."},
+          "402": {"description": "Payment required: WWW-Authenticate carries an L402 macaroon and a Lightning invoice for one bundle (and a Payment/MPP challenge)."},
+          "429": {"description": "The current bundle is still funded but busy with in-flight requests; retry after the Retry-After delay."}
+        }
+      }
+    },
+    "/models": {
+      "get": {
+        "summary": "List models (free)",
+        "responses": {"200": {"description": "OpenAI-style model list."}}
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "L402": {"type": "http", "scheme": "L402", "description": "Authorization: L402 <macaroon>:<preimage>"},
+      "Payment": {"type": "http", "scheme": "Payment", "description": "Payment HTTP Authentication Scheme (MPP), Lightning charge intent."}
+    }
+  }
+}

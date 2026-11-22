@@ -1,0 +1,44 @@
+# Lampo - public entry point. Template rendered by deploy/setup.sh.
+# Caddy gets the TLS certificate from Let's Encrypt by itself.
+# No access log is written: we do not keep IP addresses or requests.
+
+@DOMAIN@ {
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+		-Server
+	}
+
+	# OpenAI-style model list, served as a static file.
+	handle /v1/models {
+		root * /srv/lampo/site
+		rewrite * /models.json
+		file_server
+	}
+
+	# Paid inference: Aperture on localhost. flush_interval -1 streams
+	# tokens to the agent as soon as they arrive.
+	handle /v1/* {
+		# Every API response, including the 402 with the invoice, points to
+		# the terms that paying accepts.
+		header Link "<https://@DOMAIN@/terms.html>; rel=\"terms-of-service\""
+		header X-Terms-Of-Service "https://@DOMAIN@/terms.html (paying an invoice means accepting these terms)"
+		reverse_proxy 127.0.0.1:8081 {
+			flush_interval -1
+		}
+	}
+
+	# Website: instructions, prices, live counter, terms, privacy.
+	handle {
+		# NIP-05: Nostr clients fetch this from the browser, so allow any origin.
+		header /.well-known/nostr.json Access-Control-Allow-Origin "*"
+		root * /srv/lampo/site
+		encode zstd gzip
+		file_server
+	}
+}
+
+www.@DOMAIN@ {
+	redir https://@DOMAIN@{uri} permanent
+}

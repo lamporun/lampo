@@ -1,0 +1,13 @@
+[Unit]
+Description=Lampo - move earnings above the threshold to the operator's Lightning address
+
+[Service]
+Type=oneshot
+User=lampo
+Group=lampo
+ExecStart=/opt/lampo/bin/sweep.sh
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/var/lib/lampo

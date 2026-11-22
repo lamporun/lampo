@@ -1,0 +1,20 @@
+[Unit]
+Description=Lampo - Lightmeter price server
+Wants=network-online.target
+After=network-online.target
+OnFailure=lampo-alert@%n.service
+
+[Service]
+User=lampo
+Group=lampo
+ExecStart=/usr/local/bin/lightmeterd --config /etc/lampo/lightmeter.yaml
+Restart=always
+RestartSec=5
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/var/lib/lampo
+
+[Install]
+WantedBy=multi-user.target

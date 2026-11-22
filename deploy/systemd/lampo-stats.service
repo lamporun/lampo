@@ -1,0 +1,13 @@
+[Unit]
+Description=Lampo - public counter, prices and accounting ledger
+
+[Service]
+Type=oneshot
+User=lampo
+Group=lampo
+ExecStart=/usr/bin/python3 /opt/lampo/bin/stats.py
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/var/lib/lampo /srv/lampo/site

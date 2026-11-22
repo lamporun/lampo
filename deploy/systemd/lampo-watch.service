@@ -1,0 +1,13 @@
+[Unit]
+Description=Lampo - alert on new replies to the launch posts (GitHub, Stacker News)
+
+[Service]
+Type=oneshot
+User=lampo
+Group=lampo
+ExecStart=/usr/bin/python3 /opt/lampo/bin/watch.py
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/var/lib/lampo

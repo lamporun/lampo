@@ -1,0 +1,12 @@
+[Unit]
+Description=Lampo - block web traffic from countries under EU sanctions
+Wants=network-online.target
+After=network-online.target
+OnFailure=lampo-alert@%n.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/lampo/bin/geoblock.sh
+
+[Install]
+WantedBy=multi-user.target

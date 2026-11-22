@@ -1,0 +1,12 @@
+{
+  "object": "list",
+  "data": [
+    {"id": "deepseek-ai/DeepSeek-V4-Flash-0731", "object": "model", "owned_by": "deepseek", "pi402_model": "pi402/deepseek-v4-flash"},
+    {"id": "zai-org/GLM-5.2", "object": "model", "owned_by": "z-ai", "pi402_model": "pi402/glm-5.2"},
+    {"id": "moonshotai/Kimi-K3.1-Pro", "object": "model", "owned_by": "moonshotai", "pi402_model": "pi402/kimi-k3.1-pro"},
+    {"id": "moonshotai/Kimi-K3", "object": "model", "owned_by": "moonshotai", "pi402_model": "pi402/kimi-k3"},
+    {"id": "zai-org/GLM-5.3", "object": "model", "owned_by": "z-ai", "pi402_model": null},
+    {"id": "zai-org/GLM-5.3-Flash", "object": "model", "owned_by": "z-ai", "pi402_model": null}
+  ],
+  "payment": "L402 or Payment (MPP) over Lightning, prepaid token bundles. Prices: https://lampo.run/stats.json"
+}

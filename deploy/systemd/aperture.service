@@ -1,0 +1,22 @@
+[Unit]
+Description=Lampo - Aperture L402/MPP paywall
+Wants=network-online.target waved.service lightmeterd.service
+After=network-online.target waved.service lightmeterd.service
+OnFailure=lampo-alert@%n.service
+
+[Service]
+User=lampo
+Group=lampo
+# BASETEN_API_KEY, expanded by Aperture inside its config.
+EnvironmentFile=/etc/lampo/baseten.env
+ExecStart=/usr/local/bin/aperture --configfile=/etc/lampo/aperture.yaml
+Restart=always
+RestartSec=5
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/var/lib/lampo
+
+[Install]
+WantedBy=multi-user.target

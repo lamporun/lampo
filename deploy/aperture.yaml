@@ -1,0 +1,56 @@
+# Lampo - Aperture: the L402 + MPP paywall in front of Baseten Model APIs.
+# Template rendered by deploy/setup.sh into /etc/lampo/aperture.yaml.
+# Docs: aperture/docs/wavelength.md and aperture/docs/metering.md.
+
+listenaddr: "127.0.0.1:8081"
+# TLS is terminated by Caddy on the same host; Aperture is never exposed.
+insecure: true
+basedir: "/var/lib/lampo/aperture"
+debuglevel: "info"
+
+# Rolling idle window for streamed responses. Reasoning models can think in
+# silence before the first token, so keep it generous.
+writetimeout: 10m
+readtimeout: 60s
+idletimeout: 5m
+
+authenticator:
+  network: "@NETWORK@"
+  # Invoices come from our Wavelength wallet: no Lightning node, no channels.
+  wavelengthgateway: "http://127.0.0.1:10061"
+  wavelengthmacaroonpath: "@WAVED_DIR@/aperture-recv.macaroon"
+  enablempp: true
+  mpprealm: "lampo.run"
+
+# Each 402 mints invoices before anything is paid and the wallet holds at most
+# 32 pending receive intents, so bound the unpaid challenges per client network.
+challengeratelimit:
+  requests: 10
+  per: 1h
+  burst: 10
+
+# Caddy runs on the same host: read the real client from X-Forwarded-For.
+trustedproxies:
+  - "127.0.0.1"
+
+dbbackend: "sqlite"
+sqlite:
+  dbfile: "/var/lib/lampo/aperture/aperture.db"
+
+services:
+  - name: "inference"
+    hostregexp: '^.*$'
+    pathregexp: '^/v1/chat/completions$'
+    address: "inference.baseten.co:443"
+    protocol: https
+    authscheme: "l402+mpp"
+    # Expanded from Aperture's own environment (/etc/lampo/baseten.env).
+    headers:
+      Authorization: "Bearer ${BASETEN_API_KEY}"
+    dynamicprice:
+      enabled: true
+      grpcaddress: "127.0.0.1:10020"
+      insecure: true
+      metered: true
+      # Large final chunks (tool calls + usage) must still be parsed for billing.
+      usagetailbytes: 65536

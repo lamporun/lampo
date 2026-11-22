@@ -1,0 +1,8 @@
+[Unit]
+Description=Lampo - alert for %i
+
+[Service]
+Type=oneshot
+User=lampo
+Group=lampo
+ExecStart=/opt/lampo/bin/alert.sh "Servizio caduto: %i (si riavvia da solo; controlla: journalctl -u %i)"

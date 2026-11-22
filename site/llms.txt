@@ -1,0 +1,31 @@
+# Lampo
+
+> AI inference for agents, paid in sats. An OpenAI-compatible chat completions API at https://lampo.run/v1, paid per token over the Bitcoin Lightning Network with L402 or the Payment HTTP scheme (MPP). No account, no API key, no card.
+
+## How to buy
+- Send a normal OpenAI-style request to `POST https://lampo.run/v1/chat/completions`.
+- The first response is `402 Payment Required`, with a `WWW-Authenticate: L402 macaroon="...", invoice="..."` header (and a `Payment` challenge for MPP).
+- Pay the Lightning invoice. It buys a prepaid bundle of tokens for the requested model.
+- Repeat the request with `Authorization: L402 <macaroon>:<preimage>`. Reuse the same credential until the bundle runs out; then you get a new 402.
+- Streaming (`"stream": true`) is supported. Usage is debited per request: input and output tokens at their own rates.
+
+## Models
+- `deepseek-ai/DeepSeek-V4-Flash-0731` (pi402: `pi402/deepseek-v4-flash`): the cheapest bundle, 600,000 tokens; it fits pi402's default 1,000-sat limit.
+- `zai-org/GLM-5.2` (pi402: `pi402/glm-5.2`)
+- `moonshotai/Kimi-K3.1-Pro` (pi402: `pi402/kimi-k3.1-pro`)
+- `moonshotai/Kimi-K3` (pi402: `pi402/kimi-k3`)
+- `zai-org/GLM-5.3` (plain L402 / MPP; not in pi402 yet)
+- `zai-org/GLM-5.3-Flash` (plain L402 / MPP; not in pi402 yet): bundle of 600,000 tokens, like DeepSeek V4 Flash
+
+## Links
+- [Live prices and bundle sizes (JSON)](https://lampo.run/stats.json)
+- [Model list (OpenAI format)](https://lampo.run/v1/models)
+- [OpenAPI description](https://lampo.run/openapi.json)
+- [Using it from pi402](https://lampo.run/)
+- [Terms of use](https://lampo.run/terms.html): paying an invoice means accepting them.
+- [Privacy](https://lampo.run/privacy.html): prompts and responses are not stored.
+
+## Notes
+- pi402 setup: `export L402_PROXY_URL=https://lampo.run/v1`, `export PI402_NETWORK=mainnet`, `export PI402_MAX_SAT_PER_REQUEST=5000`.
+- Not available from countries under comprehensive EU sanctions.
+- Contact: contact@lampo.run · Nostr: lampo@lampo.run

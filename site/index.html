@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#0e1116">
+<title>Lampo · AI inference for agents, paid in sats</title>
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://lampo.run/">
+<meta property="og:title" content="Lampo · AI inference for agents, paid in sats">
+<meta property="og:description" content="A public pi402 seller: your coding agent buys AI inference over Lightning. No account, no API key, no card.">
+<meta property="og:image" content="https://lampo.run/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="description" content="A public pi402 seller: your coding agent buys AI inference over Lightning. No account, no API key, no card.">
+<style>
+:root{--bg:#0b0d10;--card:#13171c;--ink:#e8eaed;--muted:#9aa3ad;--line:#232a31;--accent:#f7b500;--code:#0f1216}
+@media (prefers-color-scheme: light){:root{--bg:#fafaf7;--card:#ffffff;--ink:#16191d;--muted:#5d6670;--line:#e3e5e8;--accent:#b37f00;--code:#f3f4f1}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:860px;margin:0 auto;padding:48px 20px 64px}
+h1{font-size:clamp(2rem,6vw,3.1rem);line-height:1.1;margin:0 0 14px;letter-spacing:-.02em}
+h1 span{color:var(--accent)}
+h2{font-size:1.25rem;margin:44px 0 12px}
+p{margin:0 0 12px}
+.lead{font-size:1.15rem;color:var(--muted);max-width:640px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:28px;flex-wrap:wrap}.brand{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none;font-weight:700;font-size:1.25rem}.brand img{border-radius:9px}pre{position:relative}.copy{position:absolute;top:8px;right:8px;font:12px system-ui,sans-serif;background:var(--card);color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:3px 9px;cursor:pointer}.copy:hover{color:var(--ink)}
+.badge{display:inline-block;font-size:.8rem;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--muted);margin-bottom:0}
+pre{background:var(--code);border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow-x:auto;font:13.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em}
+table{width:100%;border-collapse:collapse;font-size:.95rem}
+th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:600}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.stat b{display:block;font-size:1.6rem;font-variant-numeric:tabular-nums}
+.stat span{color:var(--muted);font-size:.9rem}
+ol li{margin-bottom:8px}
+.note{color:var(--muted);font-size:.9rem}
+footer{border-top:1px solid var(--line);margin-top:56px;padding-top:18px;color:var(--muted);font-size:.9rem}
+a{color:var(--accent)}
+.live{display:inline-flex;align-items:center;gap:9px;margin:8px 0 0;padding:6px 13px;border:1px solid var(--line);border-radius:999px;font-size:.9rem;color:var(--muted);background:var(--card)}
+.dot{width:8px;height:8px;border-radius:50%;background:#2fbf71;flex:none;animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(47,191,113,.55)}70%{box-shadow:0 0 0 8px rgba(47,191,113,0)}100%{box-shadow:0 0 0 0 rgba(47,191,113,0)}}
+.term{background:#0a0c0f;border:1px solid #232a31;border-radius:12px;margin:28px 0 0;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.35)}
+.term-bar{display:flex;gap:6px;padding:10px 12px;border-bottom:1px solid #232a31}
+.term-bar i{width:10px;height:10px;border-radius:50%;background:#353b43}
+.term-body{font:13.5px/1.75 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#c9d1d9;padding:14px 16px;min-height:230px;white-space:pre-wrap;word-break:break-word}
+.t-dim{color:#8b949e}.t-amb{color:#f7b500}.t-ok{color:#3fb950}
+.cursor{display:inline-block;width:8px;height:1.05em;background:#c9d1d9;vertical-align:-3px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+@media (prefers-reduced-motion: reduce){.dot,.cursor{animation:none}}
+</style>
+</head>
+<body>
+<main>
+  <header class="top"><a class="brand" href="/"><img src="/logo.svg" alt="" width="36" height="36"><span>Lampo</span></a><span class="badge" id="net">Lightning · pi402 seller</span></header>
+  <h1>AI inference for agents, <span>paid in sats</span></h1>
+  <p class="lead">Lampo is a public seller for <a href="https://pi402.tech/">pi402</a>. Your <a href="https://pi.dev/">Pi</a> coding agent, or any agent with an L402 wallet, buys model tokens over Lightning, per use: no account, no API key, no card, no chargebacks.</p>
+  <div class="live"><span class="dot"></span><span id="live-text">Live on Lightning mainnet</span></div>
+
+  <div class="term" role="img" aria-label="Demo: an agent asks Lampo, pays 600 sats over Lightning and gets the answer">
+    <div class="term-bar"><i></i><i></i><i></i></div>
+    <div class="term-body" id="term"></div>
+  </div>
+
+  <h2>Start in one minute</h2>
+<pre><code>pi install npm:@lightninglabs/pi-402
+
+export L402_PROXY_URL=https://lampo.run/v1
+export PI402_NETWORK=mainnet
+export PI402_WALLET_PASSWORD='choose-your-own-strong-password'
+export PI402_MAX_SAT_PER_REQUEST=5000   # Kimi and GLM bundles cost more than the 1,000 default
+
+pi
+/fund 20000                    # pay the invoice from any Lightning wallet
+/model pi402/deepseek-v4-flash # or pi402/glm-5.2, pi402/kimi-k3.1-pro, pi402/kimi-k3</code></pre>
+  <p class="note">On mainnet the pi402 wallet needs your own password and a seed you back up; see the <a href="https://github.com/lightninglabs/pi-402/blob/main/INSTALL.md">pi-402 install guide</a>. DeepSeek V4 Flash bundles fit pi402's default limits, so it works without raising <code>PI402_MAX_SAT_PER_REQUEST</code>.</p>
+
+  <h2>Models and prices</h2>
+  <p>One payment buys a bundle of tokens; each request is debited by the tokens it actually uses, input and output at their own rates. Prices follow the bitcoin price and include our <span id="margin">10%</span> margin over the upstream provider. Models without a pi402 name are sold to <a href="#plain">plain L402 clients</a> for now.</p>
+  <table>
+    <thead><tr><th>Model in pi402</th><th class="num">Bundle</th><th class="num">Bundle price</th><th class="num">Sats per 1M tokens</th></tr></thead>
+    <tbody id="prices"><tr><td colspan="4" class="note">Loading current prices…</td></tr></tbody>
+  </table>
+  <p class="note" id="updated"></p>
+
+  <h2>Live counter</h2>
+  <div class="grid">
+    <div class="stat"><b id="c-bundles">–</b><span>bundles paid</span></div>
+    <div class="stat"><b id="c-tokens">–</b><span>tokens served</span></div>
+    <div class="stat"><b id="c-sats">–</b><span>sats earned</span></div>
+    <div class="stat"><b id="c-24h">–</b><span>bundles in the last 24h</span></div>
+  </div>
+
+  <h2>How it works</h2>
+  <ol>
+    <li>Your agent sends a normal OpenAI-style request. Lampo answers <code>402 Payment Required</code> with a Lightning invoice for one bundle.</li>
+    <li>The pi402 wallet pays it within your spending limits and retries with the proof of payment.</li>
+    <li>The response streams back. The same credential keeps working until the bundle is used up.</li>
+  </ol>
+
+  <h2 id="plain">Using another agent, or plain HTTP</h2>
+  <p>Any client that speaks L402, or the Payment HTTP scheme (MPP), can buy. Model ids are listed at <a href="/v1/models">/v1/models</a>.</p>
+<pre><code># 1. Ask: you get 402 with a Lightning invoice and a macaroon
+curl -si https://lampo.run/v1/chat/completions \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"deepseek-ai/DeepSeek-V4-Flash-0731","messages":[{"role":"user","content":"hi"}]}'
+# WWW-Authenticate: L402 macaroon="AgEE...", invoice="lnbc6u1..."
+
+# 2. Pay the invoice with any Lightning wallet and keep the preimage
+
+# 3. Repeat the request with the credential; reuse it until the bundle runs out
+curl https://lampo.run/v1/chat/completions \
+  -H 'Content-Type: application/json' \
+  -H "Authorization: L402 $MACAROON:$PREIMAGE" \
+  -d '{"model":"deepseek-ai/DeepSeek-V4-Flash-0731","stream":true,"messages":[{"role":"user","content":"hi"}]}'</code></pre>
+
+  <h2>Good to know</h2>
+  <ul>
+    <li>Answers are generated by AI models (Moonshot Kimi, Z.ai GLM, DeepSeek) and can be wrong. You are talking to software, not to a person.</li>
+    <li>We do not store your prompts or responses: only token counts and payments.</li>
+    <li>Payments are final. If something breaks on our side, write to us.</li>
+    <li>Paying an invoice means accepting the <a href="/terms.html">Terms</a>. Lampo is meant for developers and businesses, and is not available in countries under comprehensive EU sanctions.</li>
+    <li>pi402 and the Wavelength wallet are new software marked alpha by their authors. Keep small balances.</li>
+  </ul>
+
+  <footer>
+    <a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="mailto:contact@lampo.run">contact@lampo.run</a> · <a href="https://primal.net/p/npub1j7yzguz5g5ykrhxg57kkhutu89esmz52aknm9n0traswgwmvmlwqda8twt">Nostr</a> · <a href="/v1/models">/v1/models</a> · <a href="https://pi402.tech/">pi402</a>
+    <p style="margin-top:8px">Lampo is an independent project, not affiliated with Lightning Labs, Baseten or the model providers.</p>
+  </footer>
+</main>
+<script>
+(function(){
+  document.querySelectorAll('pre').forEach(function(pre){
+    var b = document.createElement('button'); b.className = 'copy'; b.type = 'button'; b.textContent = 'Copy';
+    b.addEventListener('click', function(){
+      var t = pre.innerText.replace(/^Copy\n?/, '').split('\n').map(function(l){ return l.replace(/\s+#.*$/, ''); }).join('\n').trim();
+      navigator.clipboard.writeText(t).then(function(){ b.textContent = 'Copied'; setTimeout(function(){ b.textContent = 'Copy'; }, 1500); });
+    });
+    pre.appendChild(b);
+  });
+  var fmt = function(n){ return Number(n||0).toLocaleString('en-US'); };
+
+  // Terminal demo: what an agent session looks like, with the live DeepSeek price.
+  var deep = {sats: 600, tokens: 600000};
+  function demo(){
+    var el = document.getElementById('term'); if (!el) return;
+    var left = deep.tokens - 219;
+    var L = [
+      ['t-dim', '$ ', 'export L402_PROXY_URL=https://lampo.run/v1', true],
+      ['t-dim', '$ ', 'pi', true],
+      ['t-amb', '> ', '/model pi402/deepseek-v4-flash', true],
+      ['t-amb', '> ', 'Explain the Lightning Network in one sentence.', true],
+      ['t-dim', '', '← 402 Payment Required · ' + fmt(deep.tokens) + ' tokens for ' + fmt(deep.sats) + ' sats', false],
+      ['t-amb', '', '⚡ paid ' + fmt(deep.sats) + ' sats over Lightning · settled in seconds', false],
+      ['', '', '← The Lightning Network is a layer-2 protocol for Bitcoin that makes payments instant and nearly free by settling them off-chain.', true],
+      ['t-ok', '', '✓ 219 tokens used · ' + fmt(left) + ' left in your bundle', false]
+    ];
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function line(c, p, t){ var d = document.createElement('div'); var a = document.createElement('span'); a.className = c; a.textContent = p; d.appendChild(a); var b = document.createElement('span'); b.className = c; b.textContent = t; d.appendChild(b); el.appendChild(d); return b; }
+    if (reduce) { el.textContent = ''; L.forEach(function(x){ line(x[0], x[1], x[2]); }); return; }
+    var cur = document.createElement('span'); cur.className = 'cursor';
+    function run(i){
+      if (i === 0) el.textContent = '';
+      if (i >= L.length) { setTimeout(function(){ run(0); }, 5000); return; }
+      var x = L[i], span = line(x[0], x[1], '');
+      span.parentNode.appendChild(cur);
+      if (!x[3]) { span.textContent = x[2]; setTimeout(function(){ run(i + 1); }, 700); return; }
+      var k = 0, speed = i === 6 ? 14 : 38;
+      (function type(){ span.textContent = x[2].slice(0, ++k); if (k < x[2].length) setTimeout(type, speed); else setTimeout(function(){ run(i + 1); }, 450); })();
+    }
+    run(0);
+  }
+
+  fetch('/stats.json', {cache:'no-store'}).then(function(r){ return r.json(); }).then(function(s){
+    (s.models||[]).forEach(function(m){ if (m.pi_model === 'pi402/deepseek-v4-flash') { deep = {sats: m.bundle_sats, tokens: m.bundle_tokens}; } });
+    var tot = s.totals||{};
+    document.getElementById('live-text').textContent = tot.paid_bundles > 0
+      ? 'Live · ' + fmt(tot.paid_bundles) + ' bundles paid · ' + fmt(tot.tokens_served) + ' tokens served'
+      : 'Live on Lightning mainnet since 22 Nov 2026 · prices update every 10 minutes';
+    var h = s.health||{};
+    if (h.uptime_30d_percent != null) document.getElementById('live-text').textContent += ' · uptime ' + h.uptime_30d_percent + '%';
+    if (s.network && s.network !== 'mainnet') {
+      document.getElementById('net').textContent = 'Test network: ' + s.network + ' · not live yet';
+    }
+    var rows = (s.models||[]).map(function(m){
+      var label = m.pi_model ? '<code>' + m.pi_model + '</code><br><span class="note">' + m.name + '</span>'
+        : '<code>' + m.slug + '</code><br><span class="note">' + m.name + ' \u00b7 plain L402</span>';
+      return '<tr><td>' + label + '</td>' +
+        '<td class="num">' + fmt(m.bundle_tokens) + ' tokens</td>' +
+        '<td class="num">' + fmt(m.bundle_sats) + ' sats</td>' +
+        '<td class="num">' + fmt(m.sats_per_million_tokens) + '</td></tr>';
+    }).join('');
+    if (rows) document.getElementById('prices').innerHTML = rows;
+    if (s.margin_percent != null) document.getElementById('margin').textContent = s.margin_percent + '%';
+    if (s.updated_utc) document.getElementById('updated').textContent =
+      'Updated ' + s.updated_utc.replace('T',' ').replace('+00:00',' UTC') + ' at BTC ≈ $' + fmt(s.btc_usd) + '.';
+    var t = s.totals||{}, d = s.last_24h||{};
+    document.getElementById('c-bundles').textContent = fmt(t.paid_bundles);
+    document.getElementById('c-tokens').textContent = fmt(t.tokens_served);
+    document.getElementById('c-sats').textContent = fmt(t.sats_earned);
+    document.getElementById('c-24h').textContent = fmt(d.paid_bundles);
+  }).catch(function(){
+    document.getElementById('prices').innerHTML = '<tr><td colspan="4" class="note">Prices are temporarily unavailable.</td></tr>';
+  }).then(demo);
+})();
+</script>
+</body>
+</html>

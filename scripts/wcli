@@ -1,0 +1,6 @@
+#!/bin/sh
+# wavecli bound to Lampo's wallet. Run as the lampo user:
+#   sudo -u lampo /opt/lampo/bin/wcli balance
+. /etc/lampo/network.env
+exec /usr/local/bin/wavecli --network="$LAMPO_NETWORK" --datadir="$WAVED_DIR" \
+  --rpcserver=127.0.0.1:10029 --timeout=3m "$@"

@@ -1,0 +1,16 @@
+# Never commit secrets or wallet data
+*.env
+*.secrets
+*.password
+*.macaroon
+*.db
+*.db-*
+ledger/
+seed*
+api.txt
+__pycache__/
+nostr*
+*.key
+*nsec*
+*secret*
+/*.txt

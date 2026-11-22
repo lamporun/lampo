@@ -1,0 +1,120 @@
+diff --git a/README.md b/README.md
+index 9cbe733..792f8bd 100644
+--- a/README.md
++++ b/README.md
+@@ -100,8 +100,9 @@ Select a paid model and prompt:
+ ```
+ /model pi402/kimi-k3           # 1M context, natively multimodal
+ /model pi402/kimi-k3.1-pro     # 1M context, cheaper than K3 upstream
+-/model pi402/glm-4.7           # 200K context
+ /model pi402/glm-5.2           # 200K context
++/model pi402/glm-5.3           # 1M context
++/model pi402/glm-5.3-flash     # 1M context, a cheap one
+ /model pi402/deepseek-v4-flash # 1M context, the cheap one
+ ```
+ 
+diff --git a/dev/l402-e2e.ts b/dev/l402-e2e.ts
+index af2e05a..8010a38 100644
+--- a/dev/l402-e2e.ts
++++ b/dev/l402-e2e.ts
+@@ -32,7 +32,7 @@ import { WalletService } from "../src/wallet.ts";
+ 
+ const l402ProxyUrl = process.env.L402_PROXY_URL ?? "http://127.0.0.1:8504";
+ const mppProxyUrl = process.env.MPP_PROXY_URL ?? l402ProxyUrl;
+-const model = process.env.PI402_TEST_MODEL ?? "zai-org/GLM-4.7";
++const model = process.env.PI402_TEST_MODEL ?? "zai-org/GLM-5.2";
+ // The control channel executes arbitrary wallet verbs from files in this
+ // directory, so it defaults under the pi-402 data directory rather than a
+ // world-writable /tmp, where anyone on the machine could pre-create it and
+diff --git a/src/index.ts b/src/index.ts
+index 0822f71..15fa095 100644
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -260,9 +260,8 @@ export default function (pi: ExtensionAPI): void {
+ 			},
+ 			{
+ 				// Maps to deepseek-ai/DeepSeek-V4-Flash-0731 on the wire.
+-				// The budget option: its bundle quotes at roughly half a
+-				// GLM-4.7 bundle, so it is also the cheapest way to
+-				// exercise the paid path end to end.
++				// The budget option: one of the cheapest bundles, so it is
++				// also the cheapest way to exercise the paid path end to end.
+ 				id: "deepseek-v4-flash",
+ 				name: "DeepSeek V4 Flash (L402)",
+ 				input: ["text"],
+@@ -273,25 +272,37 @@ export default function (pi: ExtensionAPI): void {
+ 			},
+ 			{
+ 				// The Pi-facing id is slash-free; the provider maps it to
+-				// the Baseten Model APIs slug (zai-org/GLM-4.7) on the wire.
+-				id: "glm-4.7",
+-				name: "GLM 4.7 (L402)",
++				// the Baseten Model APIs slug (zai-org/GLM-5.2) on the wire.
++				id: "glm-5.2",
++				name: "GLM 5.2 (L402)",
+ 				input: ["text"],
+ 				reasoning: true,
+-				// Cost is metered in sats at the proxy, not billed per token here.
+ 				cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+ 				contextWindow: 200_000,
+ 				maxTokens: 8_192,
+ 			},
+ 			{
+-				// Maps to zai-org/GLM-5.2 on the wire.
+-				id: "glm-5.2",
+-				name: "GLM 5.2 (L402)",
++				// Maps to zai-org/GLM-5.3 on the wire. Same upstream list
++				// price as GLM 5.2 on Baseten, 1M-token context.
++				id: "glm-5.3",
++				name: "GLM 5.3 (L402)",
+ 				input: ["text"],
+ 				reasoning: true,
++				// Cost is metered in sats at the proxy, not billed per token here.
+ 				cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+-				contextWindow: 200_000,
+-				maxTokens: 8_192,
++				contextWindow: 1_048_576,
++				maxTokens: 32_768,
++			},
++			{
++				// Maps to zai-org/GLM-5.3-Flash on the wire. A budget model
++				// in the same price range as DeepSeek V4 Flash.
++				id: "glm-5.3-flash",
++				name: "GLM 5.3 Flash (L402)",
++				input: ["text"],
++				reasoning: true,
++				cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
++				contextWindow: 1_048_576,
++				maxTokens: 32_768,
+ 			},
+ 			{
+ 				// Maps to moonshotai/Kimi-K3 on the wire. Natively
+diff --git a/src/provider.ts b/src/provider.ts
+index 701c575..c962003 100644
+--- a/src/provider.ts
++++ b/src/provider.ts
+@@ -80,9 +80,9 @@ export interface StreamDeps {
+ // slugs sent on the wire.
+ const BASETEN_MODEL_SLUGS: Record<string, string> = {
+ 	"deepseek-v4-flash": "deepseek-ai/DeepSeek-V4-Flash-0731",
+-	"glm-4.7": "zai-org/GLM-4.7",
+-	"glm-5": "zai-org/GLM-5",
+ 	"glm-5.2": "zai-org/GLM-5.2",
++	"glm-5.3": "zai-org/GLM-5.3",
++	"glm-5.3-flash": "zai-org/GLM-5.3-Flash",
+ 	"kimi-k3": "moonshotai/Kimi-K3",
+ 	"kimi-k3.1-pro": "moonshotai/Kimi-K3.1-Pro",
+ };
+diff --git a/test/provider.test.ts b/test/provider.test.ts
+index 10ae688..6b260cf 100644
+--- a/test/provider.test.ts
++++ b/test/provider.test.ts
+@@ -186,7 +186,7 @@ test("upstreamExtraBody turns off Venice's system prompt for Venice models only"
+ 		venice_parameters: { include_venice_system_prompt: false },
+ 	});
+ 
+-	for (const baseten of ["kimi-k3", "kimi-k3.1-pro", "glm-4.7", "deepseek-v4-flash"]) {
++	for (const baseten of ["kimi-k3", "kimi-k3.1-pro", "glm-5.2", "glm-5.3-flash", "deepseek-v4-flash"]) {
+ 		assert.deepEqual(upstreamExtraBody(baseten), {}, baseten);
+ 	}
+ });

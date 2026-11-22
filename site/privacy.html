@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#0e1116">
+<title>Lampo · Privacy</title>
+<style>
+:root{--bg:#0b0d10;--ink:#e8eaed;--muted:#9aa3ad;--accent:#f7b500}
+@media (prefers-color-scheme: light){:root{--bg:#fafaf7;--ink:#16191d;--muted:#5d6670;--accent:#b37f00}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:760px;margin:0 auto;padding:40px 20px 64px}
+h1{margin:0 0 6px} h2{font-size:1.1rem;margin:30px 0 8px} .muted{color:var(--muted)}
+a{color:var(--accent)} mark{background:#f7b50033;color:inherit;padding:0 3px}
+</style>
+</head>
+<body>
+<main>
+<p><a href="/">← Lampo</a></p>
+<h1>Privacy</h1>
+<p class="muted">Version of 22 November 2026 · information under Art. 13 GDPR</p>
+
+<h2>In short</h2>
+<p>No accounts, no cookies, no tracking. We do not store your prompts or the model's responses.</p>
+
+<h2>Controller</h2>
+<p>Unnecessary Pixels, Cesano Maderno (MB), Italy · <a href="mailto:contact@lampo.run">contact@lampo.run</a>.</p>
+
+<h2>What we process</h2>
+<ul>
+<li><b>Requests.</b> Your request passes through our server to the model provider to generate the response, and the response streams back to you. We keep neither (performance of the contract, Art. 6(1)(b)). The upstream provider processes them only to serve the request.</li>
+<li><b>Payments and usage.</b> For each bundle we keep an anonymous credential identifier, the model, the price in satoshis, the tokens used and the time. They contain no name, account or email. We keep them for 10 years for accounting and tax obligations (Art. 6(1)(c)).</li>
+<li><b>IP addresses.</b> Used in memory to limit abuse and to block access from countries under EU sanctions, by comparing them with public lists of IP ranges (legitimate interest and legal obligation, Art. 6(1)(f) and (c)). Our web server writes no access log.</li>
+</ul>
+
+<h2>Who else is involved</h2>
+<p>The server runs in Italy (Aruba, Arezzo). Model inference is provided by Baseten in the United States, as our data processor under its data processing agreement; for requests served in real time Baseten states that it does not store inputs or outputs.</p>
+<p>The DeepSeek, Kimi (Moonshot AI) and GLM (Z.ai) models are open-weight models run by Baseten in the United States. No data is sent to the companies that developed them or to China.</p>
+<p>Bitcoin Lightning payments are handled by our self-custodial Wavelength wallet and the Wavelength swap service operated by Lightning Labs.</p>
+
+<h2>Your rights</h2>
+<p>You can ask for access, rectification, erasure, restriction or portability of your data, or object to processing, by writing to the contact above. Since we hold no identifying data, we may be unable to link a request to you. You can complain to the Italian data protection authority (garanteprivacy.it) or the one in your country.</p>
+</main>
+</body>
+</html>

@@ -1,0 +1,13 @@
+[Unit]
+Description=Lampo - daily summary to Telegram
+
+[Service]
+Type=oneshot
+User=lampo
+Group=lampo
+ExecStart=/usr/bin/python3 /opt/lampo/bin/stats.py --daily-report
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/var/lib/lampo /srv/lampo/site
