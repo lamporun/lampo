@@ -6,7 +6,7 @@ listenaddr: "127.0.0.1:8081"
 # TLS is terminated by Caddy on the same host; Aperture is never exposed.
 insecure: true
 basedir: "/var/lib/lampo/aperture"
-debuglevel: "info"
+debuglevel: "info,PRXY=warn"   # PRXY info lines carry the client IP: not logged (privacy)
 
 # Rolling idle window for streamed responses. Reasoning models can think in
 # silence before the first token, so keep it generous.

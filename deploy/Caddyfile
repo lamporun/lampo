@@ -34,6 +34,13 @@
 		}
 		reverse_proxy 127.0.0.1:8081 {
 			flush_interval -1
+			# Aperture answers a bare "failure fetching resource price" (often a
+			# wrong model id): give clients an OpenAI-style error they can read.
+			@failed status 500
+			handle_response @failed {
+				header Content-Type application/json
+				respond `{"error":{"message":"Lampo could not complete this request. Most often the model id is not one we sell: see https://lampo.run/v1/models (for example deepseek-ai/DeepSeek-V4-Flash-0731). If you already paid, your credential keeps working: just retry. If it keeps failing, write to contact@lampo.run.","type":"lampo_error","code":"request_failed"}}` 500
+			}
 		}
 	}
 

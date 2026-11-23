@@ -73,5 +73,14 @@ with urllib.request.urlopen(req, timeout=180) as r:
                 ev("tok", text)
 used = (usage or {}).get("total_tokens", 0)
 ev("ok", f"✓ {used:,} tokens used · {1_000_000 - used:,} left in this bundle")
+# Our own purchase: keep it out of the public sales counter (still in the tax ledger, flagged).
+import sqlite3
+con = sqlite3.connect("file:/var/lib/lampo/lightmeter/lightmeter.db?mode=ro", uri=True)
+ids = [r[0] for r in con.execute("SELECT token_id FROM bundles WHERE authorized = 1 AND created_at >= ?",
+                                 (int(t0) - 5,))]
+con.close()
+with open("/var/lib/lampo/ledger/internal-bundles.txt", "a") as f:
+    for i in ids:
+        f.write(f"{i}  # demo video {time.strftime('%Y-%m-%d')}\n")
 json.dump(events, open(OUT, "w"), ensure_ascii=False, indent=1)
 print(f"recorded {len(events)} events in {events[-1]['t']:.1f} s; tokens used {used}")

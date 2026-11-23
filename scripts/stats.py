@@ -111,6 +111,19 @@ def to_epoch(v):
     return float(v)
 
 
+INTERNAL = "/var/lib/lampo/ledger/internal-bundles.txt"
+
+
+def internal_ids():
+    """Our own purchases after launch (demo video, checks): one token id per line.
+    They stay in the tax ledger, flagged, but never count as sales on the site."""
+    try:
+        with open(INTERNAL) as f:
+            return {l.split("#")[0].strip() for l in f if l.split("#")[0].strip()}
+    except OSError:
+        return set()
+
+
 def db_rows():
     if not os.path.exists(DB):
         return [], []
@@ -119,7 +132,7 @@ def db_rows():
         bundles = con.execute(
             "SELECT token_id, model, price_sats, created_at FROM bundles WHERE authorized = 1"
         ).fetchall()
-        usage = con.execute("SELECT model, tokens, created_at FROM usage_events").fetchall()
+        usage = con.execute("SELECT model, tokens, created_at, token_id FROM usage_events").fetchall()
     finally:
         con.close()
     return bundles, usage
@@ -128,9 +141,22 @@ def db_rows():
 def update_ledger(bundles, rate, launch_ts):
     seen = set()
     exists = os.path.exists(LEDGER)
+    internal = internal_ids()
     if exists:
         with open(LEDGER, newline="") as f:
-            seen = {row["token_id"] for row in csv.DictReader(f)}
+            rows = list(csv.DictReader(f))
+        seen = {row["token_id"] for row in rows}
+        # Flag rows added to the internal list after they were recorded.
+        if any(r["token_id"] in internal and r["internal_test"] != "1" for r in rows):
+            for r in rows:
+                if r["token_id"] in internal:
+                    r["internal_test"] = "1"
+            tmp = LEDGER + ".tmp"
+            with open(tmp, "w", newline="") as f:
+                w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+                w.writeheader()
+                w.writerows(rows)
+            os.replace(tmp, LEDGER)
     new = [b for b in bundles if b[0] not in seen]
     if not new:
         return 0
@@ -147,14 +173,15 @@ def update_ledger(bundles, rate, launch_ts):
                 dt.datetime.fromtimestamp(ts, dt.timezone.utc).isoformat(timespec="seconds"),
                 model, sats, f"{rate['btc_eur']:.2f}",
                 f"{sats / 1e8 * rate['btc_eur']:.4f}", now,
-                "1" if ts < launch_ts else "0",
+                "1" if ts < launch_ts or token_id in internal else "0",
             ])
     return len(new)
 
 
 def summarize(bundles, usage, launch_ts, since=0.0):
-    paid = [b for b in bundles if to_epoch(b[3]) >= max(launch_ts, since)]
-    served = [u for u in usage if to_epoch(u[2]) >= max(launch_ts, since)]
+    internal = internal_ids()
+    paid = [b for b in bundles if to_epoch(b[3]) >= max(launch_ts, since) and b[0] not in internal]
+    served = [u for u in usage if to_epoch(u[2]) >= max(launch_ts, since) and u[3] not in internal]
     by_model = {}
     for _, model, sats, _ in paid:
         d = by_model.setdefault(model, {"bundles": 0, "sats": 0})

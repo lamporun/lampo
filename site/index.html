@@ -67,6 +67,7 @@ details p{margin:8px 0 2px;color:var(--muted)}
   <h1>Top AI models, <span>paid in sats</span></h1>
   <p class="lead">Kimi, GLM and DeepSeek through one OpenAI-compatible API. No card, no account, no API key: your code or your agent pays a Lightning invoice and gets the answer. From 1,000 sats for a million tokens.</p>
   <div class="live"><span class="dot"></span><span id="live-text">Live on Lightning mainnet</span></div>
+  <p class="note" style="margin-top:10px"><a href="/demo.mp4">▶ Watch a real purchase (23 s)</a></p>
 
   <div class="term" role="img" aria-label="Demo: an agent asks Lampo, pays 1,000 sats over Lightning and gets the answer">
     <div class="term-bar"><i></i><i></i><i></i></div>
@@ -212,7 +213,7 @@ curl https://lampo.run/v1/chat/completions \
         : '<code>' + m.slug + '</code><br><span class="note">' + m.name + ' \u00b7 plain L402</span>';
       return '<tr><td>' + label + '</td>' +
         '<td class="num">' + fmt(m.bundle_tokens) + ' tokens</td>' +
-        '<td class="num">' + fmt(m.bundle_sats) + ' sats</td>' +
+        '<td class="num">' + fmt(m.bundle_sats) + ' sats' + (s.btc_usd ? '<br><span class="note">≈ $' + (m.bundle_sats * s.btc_usd / 1e8).toFixed(2) + '</span>' : '') + '</td>' +
         '<td class="num">' + fmt(m.sats_per_million_tokens) + '</td></tr>';
     }).join('');
     if (rows) document.getElementById('prices').innerHTML = rows;

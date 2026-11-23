@@ -155,6 +155,11 @@ fi
 chown root:lampo /etc/lampo/*
 chmod 640 /etc/lampo/*
 
+log "Logs: kept at most 14 days"
+install -d /etc/systemd/journald.conf.d
+install -m 644 "$REPO_DIR/deploy/journald/10-lampo.conf" /etc/systemd/journald.conf.d/10-lampo.conf
+systemctl restart systemd-journald
+
 log "Scripts, site and services"
 install -m 755 "$REPO_DIR"/scripts/*.sh "$REPO_DIR"/scripts/*.py "$REPO_DIR"/scripts/wcli /opt/lampo/bin/
 rsync -a --delete --exclude stats.json "$REPO_DIR/site/" /srv/lampo/site/
