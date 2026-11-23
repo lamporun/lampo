@@ -43,6 +43,45 @@ META = {
 }
 
 
+# From Baseten's /v1/models (checked 2026-11-23): context window and input types.
+CAPS = {
+    "deepseek-ai/DeepSeek-V4-Flash-0731": (1048576, ["text"]),
+    "deepseek-ai/DeepSeek-V4-Pro-0813": (1048576, ["text"]),
+    "zai-org/GLM-5.2": (1048576, ["text", "image"]),
+    "zai-org/GLM-5.3": (1048576, ["text", "image"]),
+    "zai-org/GLM-5.3-Flash": (1048576, ["text", "image"]),
+    "moonshotai/Kimi-K3": (1048576, ["text", "image"]),
+    "moonshotai/Kimi-K3.1-Pro": (1048576, ["text", "image"]),
+    "nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B": (202800, ["text"]),
+}
+SITE_MODELS = "/srv/lampo/site/models.json"
+
+
+def write_models(models, btc_usd, updated):
+    """/v1/models with live prices in sats, so agents can pick a model by cost."""
+    data = []
+    for m in models:
+        ctx, inputs = CAPS.get(m["slug"], (None, ["text"]))
+        data.append({
+            "id": m["slug"], "object": "model", "owned_by": m["slug"].split("/")[0],
+            "name": m["name"], "pi402_model": m["pi_model"], "context_length": ctx,
+            "input_modalities": inputs, "features": ["streaming", "tools", "json_mode", "reasoning"],
+            "pricing": {
+                "input_msat_per_token": m["input_msat_per_token"],
+                "output_msat_per_token": m["output_msat_per_token"],
+                "bundle_tokens": m["bundle_tokens"], "bundle_sats": m["bundle_sats"],
+                "bundle_usd_approx": round(m["bundle_sats"] * btc_usd / 1e8, 2),
+            },
+        })
+    doc = {"object": "list", "data": data, "updated_utc": updated,
+           "payment": "L402 or Payment (MPP) over Lightning: one payment buys a token bundle; "
+                      "GET /v1/balance shows what is left. Docs: https://lampo.run/llms.txt"}
+    tmp = SITE_MODELS + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(doc, f, indent=1)
+    os.replace(tmp, SITE_MODELS)
+
+
 def read_env(path):
     out = {}
     try:
@@ -309,6 +348,7 @@ def main():
     with open(tmp, "w") as f:
         json.dump(stats, f, indent=1)
     os.replace(tmp, SITE_STATS)
+    write_models(stats["models"], stats["btc_usd"], stats["updated_utc"])
     print(f"stats ok: {stats['totals']['paid_bundles']} paid bundles, {recorded} new ledger rows")
 
     if "--daily-report" in sys.argv:

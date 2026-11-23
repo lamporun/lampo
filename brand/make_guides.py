@@ -185,7 +185,7 @@ def main():
         items.append(f'<li><a href="{path}">{html.escape(g["title"])}</a><br><span class="note">{html.escape(g["desc"])}</span></li>')
     index_body = '<p class="lead">Short, practical guides to paying for AI models with Bitcoin Lightning.</p>\n<ul>\n' + "\n".join(items) + "\n</ul>\n" + CTA
     (OUT / "index.html").write_text(page("Guides", "Practical guides to paying for AI models with Bitcoin Lightning: DeepSeek without a card, agents with wallets, L402.", index_body, "/guides/"))
-    urls = ["/", "/guides/"] + [f"/guides/{g['slug']}.html" for g in GUIDES] + ["/terms.html", "/privacy.html"]
+    urls = ["/", "/status.html", "/guides/"] + [f"/guides/{g['slug']}.html" for g in GUIDES] + ["/terms.html", "/privacy.html"]
     (ROOT / "site" / "sitemap.xml").write_text('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
         + "".join(f"  <url><loc>https://lampo.run{u}</loc><lastmod>{DATE}</lastmod></url>\n" for u in urls) + "</urlset>\n")
     (ROOT / "site" / "robots.txt").write_text("User-agent: *\nAllow: /\nSitemap: https://lampo.run/sitemap.xml\n")

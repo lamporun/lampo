@@ -1,0 +1,6 @@
+[
+ {"start": "2026-11-22T13:44:00+01:00", "end": "2026-11-22T22:20:00+01:00",
+  "title": "Bundles under 1,000 sats could not be bought",
+  "impact": "The 600-sat bundles (DeepSeek V4 Flash, GLM 5.3 Flash) failed: the wallet refused to receive less than 1,000 sats. Larger bundles and paid credentials kept working.",
+  "fix": "Cheapest bundles moved to exactly 1,000 sats for 1,000,000 tokens (same price per token). Added an alert that fires within 5 minutes if invoices can't be created."}
+]

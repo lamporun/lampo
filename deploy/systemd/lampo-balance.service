@@ -1,0 +1,18 @@
+[Unit]
+Description=Lampo - bundle balance endpoint (/v1/balance, read-only)
+After=network.target lightmeterd.service
+
+[Service]
+User=lampo
+Group=lampo
+ExecStart=/usr/bin/python3 /opt/lampo/bin/balance.py
+Restart=always
+RestartSec=5
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadOnlyPaths=/var/lib/lampo /srv/lampo
+
+[Install]
+WantedBy=multi-user.target

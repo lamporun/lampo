@@ -128,7 +128,7 @@ pi
   </ol>
 
   <h2 id="plain">From your own code or agent (plain HTTP)</h2>
-  <p>Any client that speaks L402, or the Payment HTTP scheme (MPP), can buy. Model ids are listed at <a href="/v1/models">/v1/models</a>.</p>
+  <p>Any client that speaks L402, or the Payment HTTP scheme (MPP), can buy. Model ids and live prices are at <a href="/v1/models">/v1/models</a>; <code>GET /v1/balance</code> with the same Authorization header shows the tokens left.</p>
 <pre><code># 1. Ask: you get 402 with a Lightning invoice and a macaroon
 curl -si https://lampo.run/v1/chat/completions \
   -H 'Content-Type: application/json' \
@@ -142,6 +142,15 @@ curl https://lampo.run/v1/chat/completions \
   -H 'Content-Type: application/json' \
   -H "Authorization: L402 $MACAROON:$PREIMAGE" \
   -d '{"model":"deepseek-ai/DeepSeek-V4-Flash-0731","stream":true,"messages":[{"role":"user","content":"hi"}]}'</code></pre>
+
+  <h2>Our commitments</h2>
+  <ul>
+    <li><b>Public, live prices.</b> Upstream list price plus 10%, recalculated every 10 minutes, in the table above and machine-readable at <a href="/v1/models">/v1/models</a>.</li>
+    <li><b>Know what's left.</b> <code>GET /v1/balance</code> with your credential tells you, free, how many tokens remain in your bundle.</li>
+    <li><b>Standard everything.</b> L402 and MPP, the OpenAI chat format, streaming, tool calling and JSON mode.</li>
+    <li><b>Nothing to leak.</b> No accounts, no prompt or answer logs, no IP addresses in our logs.</li>
+    <li><b>Open and accountable.</b> The whole setup is <a href="https://github.com/lamporun/lampo">open source</a>, and every incident is on the <a href="/status.html">status page</a> with what we changed.</li>
+  </ul>
 
   <h2>Questions</h2>
   <details><summary>Who runs Lampo?</summary><p>An independent operator in Italy (details in the <a href="/terms.html">terms</a>). The whole setup is open source: <a href="https://github.com/lamporun/lampo">github.com/lamporun/lampo</a>. Lampo is not affiliated with Lightning Labs, Baseten or the model makers.</p></details>
@@ -161,7 +170,7 @@ curl https://lampo.run/v1/chat/completions \
   </ul>
 
   <footer>
-    <a href="/guides/">Guides</a> · <a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="mailto:contact@lampo.run">contact@lampo.run</a> · <a href="https://primal.net/p/npub1j7yzguz5g5ykrhxg57kkhutu89esmz52aknm9n0traswgwmvmlwqda8twt">Nostr</a> · <a href="https://x.com/lamporun">X</a> · <a href="https://github.com/lamporun/lampo">GitHub</a> · <a href="/v1/models">/v1/models</a> · <a href="https://pi402.tech/">pi402</a>
+    <a href="/guides/">Guides</a> · <a href="/status.html">Status</a> · <a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="mailto:contact@lampo.run">contact@lampo.run</a> · <a href="https://primal.net/p/npub1j7yzguz5g5ykrhxg57kkhutu89esmz52aknm9n0traswgwmvmlwqda8twt">Nostr</a> · <a href="https://x.com/lamporun">X</a> · <a href="https://github.com/lamporun/lampo">GitHub</a> · <a href="/v1/models">/v1/models</a> · <a href="https://pi402.tech/">pi402</a>
     <p style="margin-top:8px">Lampo is an independent project, not affiliated with Lightning Labs, Baseten or the model providers.</p>
   </footer>
 </main>

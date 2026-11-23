@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Status · Lampo</title>
+<meta name="description" content="Live status of Lampo: services, 30-day uptime, prices freshness and the full incident history.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+:root{--bg:#0b0d10;--card:#13171c;--ink:#e8eaed;--muted:#9aa3ad;--line:#232a31;--accent:#f7b500;--ok:#2fbf71;--bad:#e5534b}
+@media (prefers-color-scheme: light){:root{--bg:#fafaf7;--card:#ffffff;--ink:#16191d;--muted:#5d6670;--line:#e3e5e8;--accent:#b37f00}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:760px;margin:0 auto;padding:40px 20px 64px}a{color:var(--accent)}h1{margin:0 0 8px}h2{font-size:1.15rem;margin:34px 0 10px}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:24px}.top a{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none;font-weight:700}.top img{border-radius:8px}
+.big{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;font-size:1.1rem;font-weight:600}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--muted);flex:none}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:12px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}.stat b{display:block;font-size:1.4rem}.stat span{color:var(--muted);font-size:.9rem}
+.inc{border-left:3px solid var(--accent);padding:4px 0 4px 14px;margin:14px 0}.inc p{margin:4px 0}.muted{color:var(--muted);font-size:.92rem}
+footer{border-top:1px solid var(--line);margin-top:44px;padding-top:16px;color:var(--muted);font-size:.9rem}
+</style>
+</head>
+<body><main>
+<div class="top"><a href="/"><img src="/logo.svg" alt="" width="32" height="32"><span>Lampo</span></a></div>
+<h1>Status</h1>
+<p class="muted">Checked every 5 minutes on the server; this page reads the same data every time you open it.</p>
+<div class="big"><span class="dot" id="dot"></span><span id="state">Loading…</span></div>
+<div class="grid">
+  <div class="stat"><b id="uptime">–</b><span>uptime, last 30 days</span></div>
+  <div class="stat"><b id="fresh">–</b><span>prices last updated</span></div>
+  <div class="stat"><b id="models">–</b><span>models on sale</span></div>
+</div>
+<h2>Incidents</h2>
+<p class="muted">Every incident that affected buyers, with what we changed. Nothing is hidden.</p>
+<div id="incidents"><p class="muted">Loading…</p></div>
+<footer><a href="/">Lampo</a> · <a href="/guides/">Guides</a> · <a href="/stats.json">stats.json</a> · <a href="/v1/models">/v1/models</a> · <a href="mailto:contact@lampo.run">contact@lampo.run</a></footer>
+</main>
+<script>
+(function(){
+  function esc(s){ var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+  function when(iso){ var d=new Date(iso); return d.toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'}); }
+  fetch('/stats.json',{cache:'no-store'}).then(function(r){return r.json();}).then(function(s){
+    var h=s.health||{}, age=(Date.now()-new Date(s.updated_utc).getTime())/60000, ok=h.all_services_up && age<30;
+    document.getElementById('dot').style.background = ok ? 'var(--ok)' : 'var(--bad)';
+    document.getElementById('state').textContent = ok ? 'All systems operational' : 'Degraded: we are looking into it';
+    document.getElementById('uptime').textContent = h.uptime_30d_percent!=null ? h.uptime_30d_percent+'%' : '–';
+    document.getElementById('fresh').textContent = Math.max(0,Math.round(age))+' min ago';
+    document.getElementById('models').textContent = (s.models||[]).length;
+  }).catch(function(){ document.getElementById('state').textContent='Status data unavailable'; });
+  fetch('/incidents.json',{cache:'no-store'}).then(function(r){return r.json();}).then(function(list){
+    var el=document.getElementById('incidents');
+    if(!list.length){ el.innerHTML='<p class="muted">No incidents so far.</p>'; return; }
+    el.innerHTML=list.slice().reverse().map(function(i){
+      return '<div class="inc"><b>'+esc(i.title)+'</b><p class="muted">'+esc(when(i.start))+' – '+esc(when(i.end))+'</p><p>'+esc(i.impact)+'</p><p><b>Fix:</b> '+esc(i.fix)+'</p></div>';
+    }).join('');
+  });
+})();
+</script>
+</body>
+</html>

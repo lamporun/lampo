@@ -21,6 +21,11 @@
 		file_server
 	}
 
+	# Free: tokens left in a bundle, for the holder of its credential.
+	handle /v1/balance {
+		reverse_proxy 127.0.0.1:10031
+	}
+
 	# Paid inference: Aperture on localhost. flush_interval -1 streams
 	# tokens to the agent as soon as they arrive.
 	handle /v1/* {

@@ -162,8 +162,10 @@ systemctl restart systemd-journald
 
 log "Scripts, site and services"
 install -m 755 "$REPO_DIR"/scripts/*.sh "$REPO_DIR"/scripts/*.py "$REPO_DIR"/scripts/wcli /opt/lampo/bin/
-rsync -a --delete --exclude stats.json "$REPO_DIR/site/" /srv/lampo/site/
+# stats.json and models.json are rewritten every 10 minutes by lampo-stats.
+rsync -a --delete --exclude stats.json --exclude models.json "$REPO_DIR/site/" /srv/lampo/site/
 [ -f /srv/lampo/site/stats.json ] || cp "$REPO_DIR/site/stats.json" /srv/lampo/site/stats.json
+[ -f /srv/lampo/site/models.json ] || cp "$REPO_DIR/site/models.json" /srv/lampo/site/models.json
 chown -R lampo:lampo /srv/lampo/site
 install -m 644 "$REPO_DIR"/deploy/systemd/* /etc/systemd/system/
 systemctl daemon-reload
@@ -172,7 +174,7 @@ systemctl enable --now waved.service lightmeterd.service caddy.service
 systemctl restart waved.service lightmeterd.service caddy.service
 systemctl enable --now lampo-stats.timer lampo-sweep.timer lampo-daily.timer lampo-geoblock.timer lampo-watch.timer lampo-health.timer
 systemctl enable lampo-geoblock.service
-systemctl enable --now lampo-tgbot.service
+systemctl enable --now lampo-tgbot.service lampo-balance.service
 systemctl start lampo-geoblock.service || echo "Warning: geoblock failed, see journalctl -u lampo-geoblock"
 
 if [ -f "$WAVED_DIR/aperture-recv.macaroon" ]; then
