@@ -22,7 +22,7 @@
                 "type": "object",
                 "required": ["model", "messages"],
                 "properties": {
-                  "model": {"type": "string", "enum": ["deepseek-ai/DeepSeek-V4-Flash-0731", "zai-org/GLM-5.2", "moonshotai/Kimi-K3.1-Pro", "moonshotai/Kimi-K3", "zai-org/GLM-5.3", "zai-org/GLM-5.3-Flash"]},
+                  "model": {"type": "string", "enum": ["deepseek-ai/DeepSeek-V4-Flash-0731", "zai-org/GLM-5.2", "moonshotai/Kimi-K3.1-Pro", "moonshotai/Kimi-K3", "zai-org/GLM-5.3", "zai-org/GLM-5.3-Flash", "deepseek-ai/DeepSeek-V4-Pro-0813", "nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B"]},
                   "messages": {"type": "array", "items": {"type": "object"}},
                   "max_tokens": {"type": "integer"},
                   "stream": {"type": "boolean"}

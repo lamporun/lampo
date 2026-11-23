@@ -53,6 +53,14 @@ models:
     inputusdpermtok: 0.15
     outputusdpermtok: 0.50
     bundletokens: 1000000
+  "deepseek-ai/DeepSeek-V4-Pro-0813":     # plain L402; added 2026-11-23
+    inputusdpermtok: 1.32
+    outputusdpermtok: 3.96
+    bundletokens: 500000
+  "nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B":  # plain L402; added 2026-11-23
+    inputusdpermtok: 0.60
+    outputusdpermtok: 2.40
+    bundletokens: 500000
 
 pricing:
   # Buyers pay 1.10x Baseten's list price, debited by direction. Cut from 25%

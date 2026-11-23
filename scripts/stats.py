@@ -38,6 +38,8 @@ META = {
     # Not in pi402 0.0.6: sold to plain L402 / MPP clients.
     "zai-org/GLM-5.3": (None, "GLM 5.3"),
     "zai-org/GLM-5.3-Flash": (None, "GLM 5.3 Flash"),
+    "deepseek-ai/DeepSeek-V4-Pro-0813": (None, "DeepSeek V4 Pro"),
+    "nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B": (None, "NVIDIA Nemotron 3 Ultra"),
 }
 
 

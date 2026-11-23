@@ -16,6 +16,8 @@
 - `moonshotai/Kimi-K3` (pi402: `pi402/kimi-k3`)
 - `zai-org/GLM-5.3` (plain L402 / MPP; not in pi402 yet)
 - `zai-org/GLM-5.3-Flash` (plain L402 / MPP; not in pi402 yet): 1,000,000 tokens for 1,000 sats, like DeepSeek V4 Flash
+- `deepseek-ai/DeepSeek-V4-Pro-0813` (plain L402 / MPP): stronger reasoning, 1M-token context
+- `nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B` (plain L402 / MPP): NVIDIA's open model, 200K context
 
 ## Links
 - [Live prices and bundle sizes (JSON)](https://lampo.run/stats.json)
