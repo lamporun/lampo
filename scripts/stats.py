@@ -69,6 +69,7 @@ def write_models(models, btc_usd, updated):
             "pricing": {
                 "input_msat_per_token": m["input_msat_per_token"],
                 "output_msat_per_token": m["output_msat_per_token"],
+                "cached_input_msat_per_token": m.get("cached_input_msat_per_token"),
                 "bundle_tokens": m["bundle_tokens"], "bundle_sats": m["bundle_sats"],
                 "bundle_usd_approx": round(m["bundle_sats"] * btc_usd / 1e8, 2),
             },
@@ -128,12 +129,16 @@ def prices(cfg, btc_usd):
     out = []
     for slug, m in (cfg.get("models") or {}).items():
         pin = msat_per_token(float(m["inputusdpermtok"]), margin, btc_usd)
+        cin_usd = float(m.get("cachedinputusdpermtok") or 0)
+        permille = min(max(math.ceil(cin_usd / float(m["inputusdpermtok"]) * 1000), 1), 1000) \
+            if cin_usd > 0 and float(m["inputusdpermtok"]) > 0 else 1000
         pout = msat_per_token(float(m["outputusdpermtok"]), margin, btc_usd)
         bundle = int(m.get("bundletokens", default_bundle))
         pi_id, name = META.get(slug, (slug, slug))
         out.append({
             "slug": slug, "pi_model": pi_id, "name": name,
             "input_msat_per_token": pin, "output_msat_per_token": pout,
+            "cached_input_msat_per_token": round(pin * permille / 1000, 3),
             "bundle_tokens": bundle,
             "bundle_sats": math.ceil(bundle * (pin + pout) / 2 / 1000),
             "sats_per_million_tokens": math.ceil(1_000_000 * (pin + pout) / 2 / 1000),

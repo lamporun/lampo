@@ -16,6 +16,9 @@ retentiondays: 0
 
 # Upstream list prices: Baseten Model APIs, USD per 1M tokens, checked
 # 2026-11-21 on baseten.co/pricing. Re-check before changing anything.
+# cachedinputusdpermtok = Baseten's input_cache_read price (2026-11-23):
+# cached prompt tokens are debited at that fraction of the input rate
+# (Lampo patch, contrib/lightmeter-cached-tokens.patch).
 #
 # Keys are the exact slugs the pi402 buyer sends (pi-402 src/provider.ts,
 # BASETEN_MODEL_SLUGS). GLM-4.7 and GLM-5 are no longer offered by Baseten,
@@ -32,34 +35,42 @@ models:
   "deepseek-ai/DeepSeek-V4-Flash-0731":   # pi402/deepseek-v4-flash
     inputusdpermtok: 0.13
     outputusdpermtok: 0.26
+    cachedinputusdpermtok: 0.028
     bundletokens: 1000000
   "zai-org/GLM-5.2":                      # pi402/glm-5.2
     inputusdpermtok: 1.40
     outputusdpermtok: 4.40
+    cachedinputusdpermtok: 0.14
     bundletokens: 500000
   "moonshotai/Kimi-K3.1-Pro":             # pi402/kimi-k3.1-pro
     inputusdpermtok: 2.00
     outputusdpermtok: 10.00
+    cachedinputusdpermtok: 0.20
     bundletokens: 300000
   "moonshotai/Kimi-K3":                   # pi402/kimi-k3
     inputusdpermtok: 3.00
     outputusdpermtok: 15.00
+    cachedinputusdpermtok: 0.30
     bundletokens: 200000
   "zai-org/GLM-5.3":                      # plain L402 (pi402: proposed glm-5.3)
     inputusdpermtok: 1.40
     outputusdpermtok: 4.40
+    cachedinputusdpermtok: 0.14
     bundletokens: 500000
   "zai-org/GLM-5.3-Flash":                # plain L402 (pi402: proposed glm-5.3-flash)
     inputusdpermtok: 0.15
     outputusdpermtok: 0.50
+    cachedinputusdpermtok: 0.03
     bundletokens: 1000000
   "deepseek-ai/DeepSeek-V4-Pro-0813":     # plain L402; added 2026-11-23
     inputusdpermtok: 1.32
     outputusdpermtok: 3.96
+    cachedinputusdpermtok: 0.132
     bundletokens: 500000
   "nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B":  # plain L402; added 2026-11-23
     inputusdpermtok: 0.60
     outputusdpermtok: 2.40
+    cachedinputusdpermtok: 0.12
     bundletokens: 500000
 
 pricing:

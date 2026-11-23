@@ -94,7 +94,7 @@ pi
   <p class="note">On mainnet the pi402 wallet needs your own password and a seed you back up; see the <a href="https://github.com/lightninglabs/pi-402/blob/main/INSTALL.md">pi-402 install guide</a>. DeepSeek V4 Flash bundles fit pi402's default limits, so it works without raising <code>PI402_MAX_SAT_PER_REQUEST</code>. Keep at least 2,000 sats in the wallet: after a payment the Wavelength wallet must keep either zero or at least 1,000 sats of change.</p>
 
   <h2>Models and prices</h2>
-  <p>One payment buys a bundle of tokens; each request is debited by the tokens it actually uses, input and output at their own rates. Prices follow the bitcoin price and include our <span id="margin">10%</span> margin over the upstream provider. Models without a pi402 name are sold to <a href="#plain">plain L402 clients</a> for now.</p>
+  <p>One payment buys a bundle of tokens; each request is debited by the tokens it actually uses, input and output at their own rates. Prices follow the bitcoin price and include our <span id="margin">10%</span> margin over the upstream provider. Cached input tokens (the long context an agent resends) are debited at the provider's cache price: a tenth of the input price for Kimi, GLM 5.2/5.3 and DeepSeek V4 Pro, about a fifth for the Flash models and Nemotron. Models without a pi402 name are sold to <a href="#plain">plain L402 clients</a> for now.</p>
   <table>
     <thead><tr><th>Model in pi402</th><th class="num">Bundle</th><th class="num">Bundle price</th><th class="num">Sats per 1M tokens</th></tr></thead>
     <tbody id="prices"><tr><td colspan="4" class="note">Loading current prices…</td></tr></tbody>
@@ -145,6 +145,7 @@ curl https://lampo.run/v1/chat/completions \
 
   <h2>Our commitments</h2>
   <ul>
+    <li><b>Fair for agents.</b> Cached input tokens are billed at the provider's cache price, not as fresh input: long agent sessions cost a fraction.</li>
     <li><b>Public, live prices.</b> Upstream list price plus 10%, recalculated every 10 minutes, in the table above and machine-readable at <a href="/v1/models">/v1/models</a>.</li>
     <li><b>Know what's left.</b> <code>GET /v1/balance</code> with your credential tells you, free, how many tokens remain in your bundle.</li>
     <li><b>Standard everything.</b> L402 and MPP, the OpenAI chat format, streaming, tool calling and JSON mode.</li>

@@ -1,0 +1,150 @@
+diff -ru ap060-orig/meterd/config.go ap060/meterd/config.go
+--- ap060-orig/meterd/config.go	2026-11-23 19:31:49.945282271 +0100
++++ ap060/meterd/config.go	2026-11-23 19:32:19.270828851 +0100
+@@ -53,6 +53,35 @@
+ 	// OutputMsatPerToken is the price in millisatoshi of a single output
+ 	// (completion) token.
+ 	OutputMsatPerToken int64 `yaml:"outputmsatpertoken" long:"outputmsatpertoken" description:"Price in millisatoshi per output token"`
++
++	// CachedInputPermille is the price of a cached input token, in
++	// thousandths of InputMsatPerToken (100 = a tenth of the input price).
++	// Zero, or 1000 and above, means no discount: cached tokens are billed
++	// as fresh input, the historical behavior.
++	CachedInputPermille int64 `yaml:"cachedinputpermille" long:"cachedinputpermille" description:"Price of a cached input token in thousandths of the input price (0 = no discount)"`
++}
++
++// weightedDebit returns the bundle tokens to debit for a request whose
++// prompt/completion split is known. The bundle was priced at the blended
++// (input+output)/2 rate, so each token is charged rate/blend bundle tokens;
++// cached prompt tokens are charged at CachedInputPermille of the input rate.
++// The division rounds up, never favoring the client.
++func weightedDebit(counts usageCounts, rates *ModelConfig) (int64, bool) {
++	rateSum := rates.InputMsatPerToken + rates.OutputMsatPerToken
++	if rateSum <= 0 {
++		return 0, false
++	}
++	permille := rates.CachedInputPermille
++	if permille <= 0 || permille > 1000 {
++		permille = 1000
++	}
++	cached := min(max(counts.cachedTokens, 0), max(counts.promptTokens, 0))
++	fresh := counts.promptTokens - cached
++	weightedTimes2000 := 2 * (fresh*rates.InputMsatPerToken*1000 +
++		cached*rates.InputMsatPerToken*permille +
++		counts.completionTokens*rates.OutputMsatPerToken*1000)
++	den := rateSum * 1000
++	return (weightedTimes2000 + den - 1) / den, true
+ }
+ 
+ // Config holds the daemon configuration. Values are read from an optional
+diff -ru ap060-orig/meterd/server.go ap060/meterd/server.go
+--- ap060-orig/meterd/server.go	2026-11-23 19:31:49.945282271 +0100
++++ ap060/meterd/server.go	2026-11-23 19:32:19.270828851 +0100
+@@ -560,14 +560,8 @@
+ 	// the msat value drawn from the bundle always matches the msat value
+ 	// served. The division rounds up, never favoring the client.
+ 	if found && counts.hasSplit && rates != nil {
+-		rateSum := rates.InputMsatPerToken + rates.OutputMsatPerToken
+-		if rateSum > 0 {
+-			weightedTimesTwo := 2 *
+-				(counts.promptTokens*rates.InputMsatPerToken +
+-					counts.completionTokens*
+-						rates.OutputMsatPerToken)
+-			debitTokens = (weightedTimesTwo + rateSum - 1) /
+-				rateSum
++		if d, ok := weightedDebit(counts, rates); ok {
++			debitTokens = d
+ 		}
+ 	}
+ 
+diff -ru ap060-orig/meterd/usage.go ap060/meterd/usage.go
+--- ap060-orig/meterd/usage.go	2026-11-23 19:31:49.945282271 +0100
++++ ap060/meterd/usage.go	2026-11-23 19:32:19.270828851 +0100
+@@ -24,6 +24,11 @@
+ 	// hasSplit is whether the prompt/completion split is known. When
+ 	// false, only totalTokens carries information.
+ 	hasSplit bool
++
++	// cachedTokens is the part of promptTokens served from the upstream's
++	// prompt cache (OpenAI usage.prompt_tokens_details.cached_tokens).
++	// Always between 0 and promptTokens; zero when not reported.
++	cachedTokens int64
+ }
+ 
+ // usageJSON mirrors the OpenAI usage object. Pointer fields distinguish
+@@ -32,6 +37,10 @@
+ 	PromptTokens     *int64 `json:"prompt_tokens"`
+ 	CompletionTokens *int64 `json:"completion_tokens"`
+ 	TotalTokens      *int64 `json:"total_tokens"`
++
++	PromptTokensDetails *struct {
++		CachedTokens *int64 `json:"cached_tokens"`
++	} `json:"prompt_tokens_details"`
+ }
+ 
+ // countsFromUsage converts a parsed usage object into usage counts. It
+@@ -56,6 +65,13 @@
+ 			counts.totalTokens = *u.TotalTokens
+ 		}
+ 
++		// Cached prompt tokens, clamped to the prompt count so a
++		// malformed report can never push a debit negative.
++		if d := u.PromptTokensDetails; d != nil && d.CachedTokens != nil {
++			counts.cachedTokens = min(max(*d.CachedTokens, 0),
++				max(counts.promptTokens, 0))
++		}
++
+ 	// Only the total is available, so the caller has to fall back to the
+ 	// blended rate.
+ 	case u.TotalTokens != nil:
+diff -ru ap060-orig/meterd/usage_test.go ap060/meterd/usage_test.go
+--- ap060-orig/meterd/usage_test.go	2026-11-23 19:31:49.945282271 +0100
++++ ap060/meterd/usage_test.go	2026-11-23 19:32:19.274932180 +0100
+@@ -401,3 +401,47 @@
+ 		})
+ 	}
+ }
++
++// Lampo: cached prompt tokens are parsed and clamped to the prompt count.
++func TestCountsFromUsageCachedTokens(t *testing.T) {
++	p, c, cached, over := int64(1000), int64(50), int64(800), int64(5000)
++	u := &usageJSON{PromptTokens: &p, CompletionTokens: &c}
++	u.PromptTokensDetails = &struct {
++		CachedTokens *int64 `json:"cached_tokens"`
++	}{CachedTokens: &cached}
++	got, ok := countsFromUsage(u)
++	if !ok || got.cachedTokens != 800 || got.promptTokens != 1000 {
++		t.Fatalf("got %+v ok=%v", got, ok)
++	}
++	u.PromptTokensDetails.CachedTokens = &over
++	got, _ = countsFromUsage(u)
++	if got.cachedTokens != 1000 {
++		t.Fatalf("cached not clamped: %d", got.cachedTokens)
++	}
++	body := []byte(`{"usage":{"prompt_tokens":10,"completion_tokens":2,"total_tokens":12,"prompt_tokens_details":{"cached_tokens":7}}}`)
++	got, ok = extractUsage("application/json", body)
++	if !ok || got.cachedTokens != 7 {
++		t.Fatalf("json body: %+v ok=%v", got, ok)
++	}
++}
++
++// Lampo: the weighted debit discounts cached tokens and is unchanged without them.
++func TestWeightedDebitCached(t *testing.T) {
++	r := &ModelConfig{InputMsatPerToken: 6, OutputMsatPerToken: 28}
++	base := usageCounts{promptTokens: 1000, completionTokens: 100, hasSplit: true}
++	old, _ := weightedDebit(base, r) // ceil(2*(6000+2800)/34) = 518
++	if old != 518 {
++		t.Fatalf("no-cache debit changed: %d", old)
++	}
++	withCache := base
++	withCache.cachedTokens = 800
++	same, _ := weightedDebit(withCache, r) // permille 0 means no discount
++	if same != old {
++		t.Fatalf("permille 0 must not discount: %d", same)
++	}
++	r.CachedInputPermille = 100
++	got, _ := weightedDebit(withCache, r) // ceil(2*(200*6+800*0.6+100*28)/34) = ceil(8960/34) = 264
++	if got != 264 {
++		t.Fatalf("cached debit: %d", got)
++	}
++}

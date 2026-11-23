@@ -7,7 +7,7 @@
 - The first response is `402 Payment Required`, with a `WWW-Authenticate: L402 macaroon="...", invoice="..."` header (and a `Payment` challenge for MPP).
 - Pay the Lightning invoice. It buys a prepaid bundle of tokens for the requested model.
 - Repeat the request with `Authorization: L402 <macaroon>:<preimage>`. Reuse the same credential until the bundle runs out; then you get a new 402.
-- Streaming (`"stream": true`), tool calling (`tools`) and JSON mode are supported. Usage is debited per request: input and output tokens at their own rates.
+- Streaming (`"stream": true`), tool calling (`tools`) and JSON mode are supported. Usage is debited per request: input and output tokens at their own rates, and cached input tokens (`usage.prompt_tokens_details.cached_tokens`) at the provider's cache price.
 - `GET https://lampo.run/v1/balance` with the same `Authorization: L402 <macaroon>:<preimage>` header returns the tokens left in that bundle (free).
 
 ## Models
