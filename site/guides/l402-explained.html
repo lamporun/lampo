@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>L402 explained: pay-per-request APIs over Lightning · Lampo</title>
+<meta name="description" content="What L402 is and how an HTTP 402 Payment Required response with a Lightning invoice turns into access, with a working curl example.">
+<link rel="canonical" href="https://lampo.run/guides/l402-explained.html">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<meta property="og:title" content="L402 explained: pay-per-request APIs over Lightning">
+<meta property="og:description" content="What L402 is and how an HTTP 402 Payment Required response with a Lightning invoice turns into access, with a working curl example.">
+<meta property="og:image" content="https://lampo.run/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<style>:root{--bg:#0b0d10;--card:#13171c;--ink:#e8eaed;--muted:#9aa3ad;--line:#232a31;--accent:#f7b500;--code:#0f1216}
+@media (prefers-color-scheme: light){:root{--bg:#fafaf7;--card:#ffffff;--ink:#16191d;--muted:#5d6670;--line:#e3e5e8;--accent:#b37f00;--code:#f3f4f1}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:760px;margin:0 auto;padding:40px 20px 64px}a{color:var(--accent)}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:28px}.top a{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none;font-weight:700}
+.top img{border-radius:8px}h1{font-size:clamp(1.8rem,5vw,2.5rem);line-height:1.15;margin:0 0 12px}h2{font-size:1.25rem;margin:36px 0 10px}
+.lead{color:var(--muted);font-size:1.1rem}pre{background:var(--code);border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow-x:auto;font:14px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9em}li{margin-bottom:8px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin:22px 0}
+.cta{display:inline-block;background:var(--accent);color:#111;padding:10px 18px;border-radius:999px;text-decoration:none;font-weight:700;margin-top:6px}
+.note{color:var(--muted);font-size:.92rem}footer{border-top:1px solid var(--line);margin-top:48px;padding-top:16px;color:var(--muted);font-size:.9rem}</style>
+</head>
+<body><main>
+<div class="top"><a href="/"><img src="/logo.svg" alt="" width="32" height="32"><span>Lampo</span></a></div>
+<h1>L402 explained: pay-per-request APIs over Lightning</h1>
+
+<p class="lead">L402 is a way to sell API access without accounts: the server asks for a Lightning payment in the HTTP response itself, and the proof of payment becomes the credential.</p>
+<h2>The flow</h2>
+<ol>
+<li><b>Ask.</b> Send the request without credentials. The server answers <code>402 Payment Required</code> with a header like <code>WWW-Authenticate: L402 macaroon="...", invoice="lnbc..."</code>.</li>
+<li><b>Pay.</b> Pay the invoice with any Lightning wallet and keep the <em>preimage</em>, the secret your wallet receives when the payment completes.</li>
+<li><b>Retry.</b> Send the same request with <code>Authorization: L402 &lt;macaroon&gt;:&lt;preimage&gt;</code>. The server checks that the preimage matches the invoice and serves the request.</li>
+</ol>
+<h2>Try it with curl</h2>
+<pre><code># 1. Ask: get the macaroon and the invoice
+curl -si https://lampo.run/v1/chat/completions \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"deepseek-ai/DeepSeek-V4-Flash-0731","messages":[{"role":"user","content":"hi"}]}'
+
+# 2. Pay the invoice with your wallet and copy the preimage
+
+# 3. Retry with the credential
+curl https://lampo.run/v1/chat/completions \
+  -H 'Content-Type: application/json' \
+  -H "Authorization: L402 $MACAROON:$PREIMAGE" \
+  -d '{"model":"deepseek-ai/DeepSeek-V4-Flash-0731","messages":[{"role":"user","content":"hi"}]}'</code></pre>
+<h2>Bundles: pay once, call many times</h2>
+<p>Lampo uses Lightning Labs' Aperture with metered pricing: one payment buys a bundle of tokens, and the same credential keeps working, debited per request, until the bundle runs out. Then you get a new 402.</p>
+<h2>And MPP?</h2>
+<p>Lampo also offers the Payment HTTP Authentication Scheme (MPP) in the same 402 response, for clients that prefer it.</p>
+<div class="box"><b>Live prices</b>: <a href="/">lampo.run</a> shows every model and bundle, updated every 10 minutes.
+The cheapest bundle is 1,000 sats (about $0.60) for 1,000,000 tokens of DeepSeek V4 Flash.<br>
+<a class="cta" href="/">See models and prices</a></div>
+<footer><a href="/">Lampo</a> · <a href="/guides/">Guides</a> · <a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="mailto:contact@lampo.run">contact@lampo.run</a>
+<p class="note">Lampo is an independent project, not affiliated with Lightning Labs, Alby, Baseten or the model makers. Payments are final; answers are generated by AI and can be wrong. Not available in countries under comprehensive EU sanctions.</p></footer>
+</main></body>
+</html>

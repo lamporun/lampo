@@ -24,6 +24,7 @@
 - [Model list (OpenAI format)](https://lampo.run/v1/models)
 - [OpenAPI description](https://lampo.run/openapi.json)
 - [Using it from pi402](https://lampo.run/)
+- [Guides](https://lampo.run/guides/): DeepSeek without a card, agents with a Lightning wallet, L402 explained
 - [Terms of use](https://lampo.run/terms.html): paying an invoice means accepting them.
 - [Privacy](https://lampo.run/privacy.html): prompts and responses are not stored.
 
