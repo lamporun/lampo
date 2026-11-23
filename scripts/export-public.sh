@@ -7,7 +7,7 @@ out="${1:?usage: export-public.sh OUTPUT_DIR}"
 mkdir -p "$out"
 cd "$(dirname "$0")/.."
 git archive HEAD | tar -x -C "$out"
-for p in agent docs/x-replies.md docs/show-hn.md docs/RUNBOOK.md docs/email-baseten.md docs/listings.md docs/launch-posts.md docs/upstream.md docs/opensats.md docs/nostr; do
+for p in agent docs/x-replies.md docs/show-hn.md docs/RUNBOOK.md docs/email-baseten.md docs/listings.md docs/launch-posts.md docs/upstream.md docs/opensats.md docs/nostr docs/faro.md docs/chat-design.md; do
   [ ! -e "$out/$p" ] || rm -r -- "${out:?}/$p"
 done
 cd "$out"
