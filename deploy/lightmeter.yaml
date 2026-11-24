@@ -26,52 +26,54 @@ retentiondays: 0
 # inference.baseten.co/v1/models) are not in pi402 0.0.6 yet: plain L402
 # clients can buy them today, pi402 once its model list includes them.
 #
-# Bundle sizes: at BTC ~60,000 USD each bundle stays under ~5,000 sats. The
-# cheap bundles are exactly 1,000 sats: pi402's default cap allows it (it
-# refuses only amounts above the cap), and the mainnet Wavelength operator
-# refuses receives below 1,000 sats ("sub-dust receive ... unavailable"),
-# which broke the old 600-sat bundles on 2026-11-22.
+# Bundles have a fixed price in sats (bundlesats, Lampo's Lightmeter change):
+# each rate refresh sizes the bundle so it quotes exactly that, and the token
+# count follows the BTC price. Rates are exact per thousand tokens (aperture
+# #345), so cheap models are no longer rounded up to 1 msat per token.
+# Never below 1,000 sats: the mainnet Wavelength operator refuses smaller
+# receives (the 600-sat bundles broke on 2026-11-22). 1,000 sats is also
+# pi402's default per-payment cap, which refuses only amounts above it.
 models:
   "deepseek-ai/DeepSeek-V4-Flash-0731":   # pi402/deepseek-v4-flash
     inputusdpermtok: 0.13
     outputusdpermtok: 0.26
     cachedinputusdpermtok: 0.028
-    bundletokens: 1000000
+    bundlesats: 1000
   "zai-org/GLM-5.2":                      # pi402/glm-5.2
     inputusdpermtok: 1.40
     outputusdpermtok: 4.40
     cachedinputusdpermtok: 0.14
-    bundletokens: 500000
+    bundlesats: 2500
   "moonshotai/Kimi-K3.1-Pro":             # pi402/kimi-k3.1-pro
     inputusdpermtok: 2.00
     outputusdpermtok: 10.00
     cachedinputusdpermtok: 0.20
-    bundletokens: 300000
+    bundlesats: 3000
   "moonshotai/Kimi-K3":                   # pi402/kimi-k3
     inputusdpermtok: 3.00
     outputusdpermtok: 15.00
     cachedinputusdpermtok: 0.30
-    bundletokens: 200000
+    bundlesats: 3000
   "zai-org/GLM-5.3":                      # plain L402 (pi402: proposed glm-5.3)
     inputusdpermtok: 1.40
     outputusdpermtok: 4.40
     cachedinputusdpermtok: 0.14
-    bundletokens: 500000
+    bundlesats: 2500
   "zai-org/GLM-5.3-Flash":                # plain L402 (pi402: proposed glm-5.3-flash)
     inputusdpermtok: 0.15
     outputusdpermtok: 0.50
     cachedinputusdpermtok: 0.03
-    bundletokens: 1000000
+    bundlesats: 1000
   "deepseek-ai/DeepSeek-V4-Pro-0813":     # plain L402; added 2026-11-23
     inputusdpermtok: 1.32
     outputusdpermtok: 3.96
     cachedinputusdpermtok: 0.132
-    bundletokens: 500000
+    bundlesats: 2500
   "nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B":  # plain L402; added 2026-11-23
     inputusdpermtok: 0.60
     outputusdpermtok: 2.40
     cachedinputusdpermtok: 0.12
-    bundletokens: 500000
+    bundlesats: 1500
 
 pricing:
   # Buyers pay 1.10x Baseten's list price, debited by direction. Cut from 25%

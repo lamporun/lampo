@@ -65,7 +65,7 @@ details p{margin:8px 0 2px;color:var(--muted)}
 <main>
   <header class="top"><a class="brand" href="/"><img src="/logo.svg" alt="" width="36" height="36"><span>Lampo</span></a><span class="badge" id="net">Lightning · pi402 seller</span></header>
   <h1>Top AI models, <span>paid in sats</span></h1>
-  <p class="lead">Kimi, GLM, DeepSeek and Nemotron through one OpenAI-compatible API. No card, no account, no API key: your code or your agent pays a Lightning invoice and gets the answer. From 1,000 sats for a million tokens.</p>
+  <p class="lead">Kimi, GLM, DeepSeek and Nemotron through one OpenAI-compatible API. No card, no account, no API key: your code or your agent pays a Lightning invoice and gets the answer. From 1,000 sats for <span id="cheap-tokens">millions of</span> tokens.</p>
   <div class="live"><span class="dot"></span><span id="live-text">Live on Lightning mainnet</span></div>
   <p class="note" style="margin-top:10px"><a href="/demo.mp4">▶ Watch a real purchase (23 s)</a></p>
 
@@ -94,7 +94,7 @@ pi
   <p class="note">On mainnet the pi402 wallet needs your own password and a seed you back up; see the <a href="https://github.com/lightninglabs/pi-402/blob/main/INSTALL.md">pi-402 install guide</a>. DeepSeek V4 Flash bundles fit pi402's default limits, so it works without raising <code>PI402_MAX_SAT_PER_REQUEST</code>. Keep at least 2,000 sats in the wallet: after a payment the Wavelength wallet must keep either zero or at least 1,000 sats of change.</p>
 
   <h2>Models and prices</h2>
-  <p>One payment buys a bundle of tokens; each request is debited by the tokens it actually uses, input and output at their own rates. Prices follow the bitcoin price and include our <span id="margin">10%</span> margin over the upstream provider. Cached input tokens (the long context an agent resends) are debited at the provider's cache price: a tenth of the input price for Kimi, GLM 5.2/5.3 and DeepSeek V4 Pro, about a fifth for the Flash models and Nemotron. Models without a pi402 name are sold to <a href="#plain">plain L402 clients</a> for now.</p>
+  <p>One payment buys a bundle of tokens; each request is debited by the tokens it actually uses, input and output at their own rates. Bundles have a fixed price in sats; how many tokens they hold follows the bitcoin price, and rates include our <span id="margin">10%</span> margin over the upstream provider. Cached input tokens (the long context an agent resends) are debited at the provider's cache price: a tenth of the input price for Kimi, GLM 5.2/5.3 and DeepSeek V4 Pro, about a fifth for the Flash models and Nemotron. Models without a pi402 name are sold to <a href="#plain">plain L402 clients</a> for now.</p>
   <table>
     <thead><tr><th>Model in pi402</th><th class="num">Bundle</th><th class="num">Bundle price</th><th class="num">Sats per 1M tokens</th></tr></thead>
     <tbody id="prices"><tr><td colspan="4" class="note">Loading current prices…</td></tr></tbody>
@@ -155,7 +155,7 @@ curl https://lampo.run/v1/chat/completions \
 
   <h2>Questions</h2>
   <details><summary>Who runs Lampo?</summary><p>An independent operator in Italy (details in the <a href="/terms.html">terms</a>). The whole setup is open source: <a href="https://github.com/lamporun/lampo">github.com/lamporun/lampo</a>. Lampo is not affiliated with Lightning Labs, Baseten or the model makers.</p></details>
-  <details><summary>How much is 1,000 sats?</summary><p>Around $0.60 at today's bitcoin price. Prices in sats follow the bitcoin price and are recalculated every 10 minutes; the table above is always current.</p></details>
+  <details><summary>How much is 1,000 sats?</summary><p>Around $0.60 at today's bitcoin price, and it buys about 2.8 million tokens of DeepSeek V4 Flash. Bundle prices in sats are fixed; the number of tokens follows the bitcoin price and is recalculated every 10 minutes, so the table above is always current.</p></details>
   <details><summary>What if something fails after I pay?</summary><p>Your bundle is not lost: the same credential keeps working until its tokens are used up, so just retry. If something breaks on our side, write to <a href="mailto:contact@lampo.run">contact@lampo.run</a>.</p></details>
   <details><summary>Do you keep my prompts?</summary><p>No. We store only token counts and payments. The models run on Baseten's servers in the US, which process the request to answer it.</p></details>
   <details><summary>Which wallet do I need?</summary><p>For pi402, its built-in wallet: fund it from any Lightning wallet. From your own code, any Lightning wallet that gives you the payment preimage, or an L402/MPP client. Keep at least 2,000 sats in a Wavelength wallet.</p></details>
@@ -239,6 +239,7 @@ curl https://lampo.run/v1/chat/completions \
     }).join('');
     if (rows) document.getElementById('prices').innerHTML = rows;
     if (s.margin_percent != null) document.getElementById('margin').textContent = s.margin_percent + '%';
+    (s.models||[]).forEach(function(m){ if (m.slug === 'deepseek-ai/DeepSeek-V4-Flash-0731') { var el = document.getElementById('cheap-tokens'); if (el) el.textContent = 'about ' + (m.bundle_tokens/1e6).toFixed(1) + ' million'; } });
     if (s.updated_utc) document.getElementById('updated').textContent =
       'Updated ' + s.updated_utc.replace('T',' ').replace('+00:00',' UTC') + ' at BTC ≈ $' + fmt(s.btc_usd) + '.';
     var t = s.totals||{}, d = s.last_24h||{};

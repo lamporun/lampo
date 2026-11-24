@@ -9,7 +9,7 @@ ledger/
 seed*
 api.txt
 __pycache__/
-nostr*
+/nostr*
 *.key
 *nsec*
 *secret*

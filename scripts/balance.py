@@ -100,10 +100,12 @@ class Handler(BaseHTTPRequestHandler):
         if not row:
             return self.reply(404, {"error": "no bundle for this credential"})
         model, price, remaining, authorized = row
-        if not authorized:
-            return self.reply(402, {"error": "this bundle has not been paid yet", "model": model})
+        # A matching preimage proves the invoice was paid. Lightmeter flags a
+        # bundle as authorized only on its first paid request, so a bundle
+        # paid but not used yet is reported too, with activated: false.
         return self.reply(200, {"model": model, "remaining_tokens": remaining,
-                                "bundle_tokens": bundle_sizes().get(model), "price_sats": price})
+                                "bundle_tokens": bundle_sizes().get(model), "price_sats": price,
+                                "activated": bool(authorized)})
 
     def log_message(self, *args):  # no access log: we keep no IPs or requests
         pass

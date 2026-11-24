@@ -115,12 +115,12 @@ def rates():
             return json.load(f)
 
 
-def msat_per_token(usd_per_mtok, margin, btc_usd):
-    # Lightmeter: usd_per_mtok * 1e5 * (1 + margin/100) / btc_usd, rounded up,
-    # and any positive price floors at 1 msat.
+def msat_per_ktok(usd_per_mtok, margin, btc_usd):
+    # Lightmeter (Lampo change on top of aperture #345): exact msat per thousand
+    # tokens, usd_per_mtok * 1e8 * (1 + margin/100) / btc_usd, rounded up, >= 1.
     if usd_per_mtok <= 0:
         return 0
-    return max(1, math.ceil(usd_per_mtok * 1e5 * (1 + margin / 100) / btc_usd))
+    return max(1, math.ceil(usd_per_mtok * 1e8 * (1 + margin / 100) / btc_usd))
 
 
 def prices(cfg, btc_usd):
@@ -128,20 +128,22 @@ def prices(cfg, btc_usd):
     default_bundle = int(cfg.get("bundletokens", 1_000_000))
     out = []
     for slug, m in (cfg.get("models") or {}).items():
-        pin = msat_per_token(float(m["inputusdpermtok"]), margin, btc_usd)
+        in_usd, out_usd = float(m["inputusdpermtok"]), float(m["outputusdpermtok"])
+        kin, kout = msat_per_ktok(in_usd, margin, btc_usd), msat_per_ktok(out_usd, margin, btc_usd)
         cin_usd = float(m.get("cachedinputusdpermtok") or 0)
-        permille = min(max(math.ceil(cin_usd / float(m["inputusdpermtok"]) * 1000), 1), 1000) \
-            if cin_usd > 0 and float(m["inputusdpermtok"]) > 0 else 1000
-        pout = msat_per_token(float(m["outputusdpermtok"]), margin, btc_usd)
-        bundle = int(m.get("bundletokens", default_bundle))
+        permille = min(max(math.ceil(cin_usd / in_usd * 1000), 1), 1000) if cin_usd > 0 and in_usd > 0 else 1000
+        if int(m.get("bundlesats") or 0) > 0 and kin + kout > 0:
+            bundle = max(int(m["bundlesats"]) * 2_000_000 // (kin + kout), 1)
+        else:
+            bundle = int(m.get("bundletokens", default_bundle))
         pi_id, name = META.get(slug, (slug, slug))
         out.append({
             "slug": slug, "pi_model": pi_id, "name": name,
-            "input_msat_per_token": pin, "output_msat_per_token": pout,
-            "cached_input_msat_per_token": round(pin * permille / 1000, 3),
+            "input_msat_per_token": round(kin / 1000, 3), "output_msat_per_token": round(kout / 1000, 3),
+            "cached_input_msat_per_token": round(kin * permille / 1_000_000, 4),
             "bundle_tokens": bundle,
-            "bundle_sats": math.ceil(bundle * (pin + pout) / 2 / 1000),
-            "sats_per_million_tokens": math.ceil(1_000_000 * (pin + pout) / 2 / 1000),
+            "bundle_sats": -(-bundle * (kin + kout) // 2_000_000),
+            "sats_per_million_tokens": math.ceil((kin + kout) / 2),
         })
     return sorted(out, key=lambda p: p["sats_per_million_tokens"])
 

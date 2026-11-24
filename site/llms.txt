@@ -7,16 +7,16 @@
 - The first response is `402 Payment Required`, with a `WWW-Authenticate: L402 macaroon="...", invoice="..."` header (and a `Payment` challenge for MPP).
 - Pay the Lightning invoice. It buys a prepaid bundle of tokens for the requested model.
 - Repeat the request with `Authorization: L402 <macaroon>:<preimage>`. Reuse the same credential until the bundle runs out; then you get a new 402.
-- Streaming (`"stream": true`), tool calling (`tools`) and JSON mode are supported. Usage is debited per request: input and output tokens at their own rates, and cached input tokens (`usage.prompt_tokens_details.cached_tokens`) at the provider's cache price.
+- Streaming (`"stream": true`), tool calling (`tools`) and JSON mode are supported. Bundles have fixed prices in sats (1,000 to 3,000). Rates are exact per thousand tokens. Usage is debited per request: input and output tokens at their own rates, and cached input tokens (`usage.prompt_tokens_details.cached_tokens`) at the provider's cache price.
 - `GET https://lampo.run/v1/balance` with the same `Authorization: L402 <macaroon>:<preimage>` header returns the tokens left in that bundle (free).
 
 ## Models
-- `deepseek-ai/DeepSeek-V4-Flash-0731` (pi402: `pi402/deepseek-v4-flash`): the cheapest bundle: 1,000,000 tokens for 1,000 sats, which is exactly pi402's default per-payment limit.
+- `deepseek-ai/DeepSeek-V4-Flash-0731` (pi402: `pi402/deepseek-v4-flash`): the cheapest bundle: 1,000 sats (exactly pi402's default per-payment limit) for about 2.8 million tokens; the token count follows the BTC price, see /v1/models.
 - `zai-org/GLM-5.2` (pi402: `pi402/glm-5.2`)
 - `moonshotai/Kimi-K3.1-Pro` (pi402: `pi402/kimi-k3.1-pro`)
 - `moonshotai/Kimi-K3` (pi402: `pi402/kimi-k3`)
 - `zai-org/GLM-5.3` (plain L402 / MPP; not in pi402 yet)
-- `zai-org/GLM-5.3-Flash` (plain L402 / MPP; not in pi402 yet): 1,000,000 tokens for 1,000 sats, like DeepSeek V4 Flash
+- `zai-org/GLM-5.3-Flash` (plain L402 / MPP; not in pi402 yet): 1,000 sats for about 1.7 million tokens
 - `deepseek-ai/DeepSeek-V4-Pro-0813` (plain L402 / MPP): stronger reasoning, 1M-token context
 - `nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B` (plain L402 / MPP): NVIDIA's open model, 200K context
 

@@ -92,22 +92,14 @@ fetch() {
 fetch aperture "$APERTURE_COMMIT"
 (cd /opt/lampo/src/aperture && go build -trimpath -o /usr/local/bin/aperture ./cmd/aperture)
 fetch lightmeter "$LIGHTMETER_COMMIT"
-# Lampo patch (aperture#344): cached prompt tokens are debited at the upstream
-# cache price. Lightmeter meters through aperture's meterd library v0.6.0, so we
-# build it against a patched copy of that library.
-AP_FORK=/opt/lampo/src/aperture-v0.6.0-lampo
-if [ ! -f "$AP_FORK/.lampo-patched" ]; then
-  (cd /opt/lampo/src/lightmeter && go mod download github.com/lightninglabs/aperture@v0.6.0)
-  rm -rf -- "${AP_FORK:?}"
-  cp -r "$(go env GOMODCACHE)/github.com/lightninglabs/aperture@v0.6.0" "$AP_FORK"
-  chmod -R u+w "$AP_FORK"
-  patch -d "$AP_FORK" -p1 -s < "$REPO_DIR/contrib/aperture-v0.6.0-meterd-cached-tokens.patch"
-  touch "$AP_FORK/.lampo-patched"
-fi
-if git -C /opt/lampo/src/lightmeter apply --check "$REPO_DIR/contrib/lightmeter-cached-tokens.patch" 2>/dev/null; then
-  git -C /opt/lampo/src/lightmeter apply "$REPO_DIR/contrib/lightmeter-cached-tokens.patch"
-fi
-(cd /opt/lampo/src/lightmeter && go mod edit -replace github.com/lightninglabs/aperture="$AP_FORK")
+# Lampo change to Lightmeter (offered upstream): exact per-thousand-token rates
+# and cached-input pricing from aperture #345 (merged as 7d534da38), plus
+# bundles priced in sats. Lightmeter meters through aperture's meterd library,
+# so we build it against that aperture commit with our patch applied.
+LM=/opt/lampo/src/lightmeter
+git -C "$LM" checkout -q -f "$LIGHTMETER_COMMIT"
+git -C "$LM" clean -qfd
+git -C "$LM" apply "$REPO_DIR/contrib/lightmeter-fractional-cached-bundlesats.patch"
 (cd /opt/lampo/src/lightmeter && go build -trimpath -o /usr/local/bin/lightmeterd ./cmd/lightmeterd)
 
 log "Wavelength $WAVELENGTH_VERSION (release binaries, checksum from the signed manifest)"

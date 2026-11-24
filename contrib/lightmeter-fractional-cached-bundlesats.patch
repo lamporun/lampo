@@ -1,0 +1,495 @@
+diff --git a/config.go b/config.go
+index 3159b92..54f0dab 100644
+--- a/config.go
++++ b/config.go
+@@ -66,9 +66,22 @@ type ModelPricing struct {
+ 	// (completion) tokens.
+ 	OutputUSDPerMTok float64 `yaml:"outputusdpermtok"`
+ 
++	// CachedInputUSDPerMTok is the upstream USD price per million input
++	// tokens served from the prompt cache. When set, cached prompt tokens
++	// are debited at this fraction of the input price; zero bills them as
++	// fresh input.
++	CachedInputUSDPerMTok float64 `yaml:"cachedinputusdpermtok"`
++
+ 	// BundleTokens overrides the daemon-wide bundle size for this model
+ 	// when positive.
+ 	BundleTokens int64 `yaml:"bundletokens"`
++
++	// BundleSats, when positive, fixes the bundle price in satoshis instead
++	// of its size: each rate refresh sizes the bundle so it quotes exactly
++	// this many sats. Useful when the receiving wallet has a minimum invoice
++	// amount, or to keep a bundle under a buyer's per-payment cap. Takes
++	// precedence over bundletokens.
++	BundleSats int64 `yaml:"bundlesats"`
+ }
+ 
+ // BTCUSDConfig configures how the daemon learns the BTC-USD rate used to
+@@ -354,6 +367,21 @@ func (c *Config) validate() error {
+ 		if err != nil {
+ 			return err
+ 		}
++		err = finite(name+" cachedinputusdpermtok", m.CachedInputUSDPerMTok)
++		if err != nil {
++			return err
++		}
++		if m.CachedInputUSDPerMTok < 0 ||
++			(m.InputUSDPerMTok > 0 &&
++				m.CachedInputUSDPerMTok > m.InputUSDPerMTok) {
++
++			return fmt.Errorf("model %s: cachedinputusdpermtok must be "+
++				"between 0 and inputusdpermtok", name)
++		}
++		if m.BundleSats < 0 {
++			return fmt.Errorf("model %s: bundlesats must not be "+
++				"negative", name)
++		}
+ 		if m.InputUSDPerMTok < 0 || m.OutputUSDPerMTok < 0 {
+ 			return fmt.Errorf("model %s has negative USD rates",
+ 				name)
+diff --git a/go.mod b/go.mod
+index 7d8fcd7..ac1f860 100644
+--- a/go.mod
++++ b/go.mod
+@@ -11,7 +11,7 @@ replace github.com/lightninglabs/lndclient => github.com/ellemouton/lndclient v0
+ require (
+ 	github.com/goccy/go-yaml v1.15.23
+ 	github.com/jessevdk/go-flags v1.6.1
+-	github.com/lightninglabs/aperture v0.6.0
++	github.com/lightninglabs/aperture v0.6.2-0.20261123212612-7d534da38670
+ 	github.com/stretchr/testify v1.11.1
+ 	modernc.org/sqlite v1.29.10
+ )
+diff --git a/go.sum b/go.sum
+index e963c5f..e2c0010 100644
+--- a/go.sum
++++ b/go.sum
+@@ -33,8 +33,8 @@ github.com/kr/pretty v0.3.1 h1:flRD4NNwYAUpkphVc1HcthR4KEIFJ65n8Mw5qdRn3LE=
+ github.com/kr/pretty v0.3.1/go.mod h1:hoEshYVHaxMs3cyo3Yncou5ZscifuDolrwPKZanG3xk=
+ github.com/kr/text v0.2.0 h1:5Nx0Ya0ZqY2ygV366QzturHI13Jq95ApcVaJBhpS+AY=
+ github.com/kr/text v0.2.0/go.mod h1:eLer722TekiGuMkidMxC/pM04lWEeraHUUmBw8l2grE=
+-github.com/lightninglabs/aperture v0.6.0 h1:e+ghwyUvxQd67Z8F/yg7B4D5DIw/LFnW8Hq8jrhY19c=
+-github.com/lightninglabs/aperture v0.6.0/go.mod h1:SrMypIQi+JczW1MDbMw01K4A1z5+FmInkzo8OpBrMBw=
++github.com/lightninglabs/aperture v0.6.2-0.20261123212612-7d534da38670 h1:T9835CjoRwrfiHkZid+mZCIOVYhxs/973xmYd69lBss=
++github.com/lightninglabs/aperture v0.6.2-0.20261123212612-7d534da38670/go.mod h1:SrMypIQi+JczW1MDbMw01K4A1z5+FmInkzo8OpBrMBw=
+ github.com/lightninglabs/protobuf-go-hex-display v1.34.2-hex-display h1:w7FM5LH9Z6CpKxl13mS48idsu6F+cEZf0lkyiV+Dq9g=
+ github.com/lightninglabs/protobuf-go-hex-display v1.34.2-hex-display/go.mod h1:qYOHts0dSfpeUzUFpOMr/WGzszTmLH+DiWniOlNbLDw=
+ github.com/mattn/go-isatty v0.0.20 h1:xfD0iDuEKnDkl03q4limB+vH+GxLEtL/jb4xVJSWWEY=
+diff --git a/lightmeter.go b/lightmeter.go
+index 5c0229c..3e4b728 100644
+--- a/lightmeter.go
++++ b/lightmeter.go
+@@ -86,18 +86,22 @@ func NewDaemon(ctx context.Context, cfg *Config) (*Daemon, error) {
+ 	models := make(map[string]*pricing.ModelUSD, len(cfg.Models))
+ 	for name, m := range cfg.Models {
+ 		models[name] = &pricing.ModelUSD{
+-			InputUSDPerMTok:  m.InputUSDPerMTok,
+-			OutputUSDPerMTok: m.OutputUSDPerMTok,
+-			BundleTokens:     m.BundleTokens,
++			InputUSDPerMTok:       m.InputUSDPerMTok,
++			OutputUSDPerMTok:      m.OutputUSDPerMTok,
++			CachedInputUSDPerMTok: m.CachedInputUSDPerMTok,
++			BundleTokens:          m.BundleTokens,
++			BundleSats:            m.BundleSats,
+ 		}
+ 	}
+ 
+ 	var defaultUSD *pricing.ModelUSD
+ 	if d := cfg.Pricing.DefaultUSD; d != nil {
+ 		defaultUSD = &pricing.ModelUSD{
+-			InputUSDPerMTok:  d.InputUSDPerMTok,
+-			OutputUSDPerMTok: d.OutputUSDPerMTok,
+-			BundleTokens:     d.BundleTokens,
++			InputUSDPerMTok:       d.InputUSDPerMTok,
++			OutputUSDPerMTok:      d.OutputUSDPerMTok,
++			CachedInputUSDPerMTok: d.CachedInputUSDPerMTok,
++			BundleTokens:          d.BundleTokens,
++			BundleSats:            d.BundleSats,
+ 		}
+ 	}
+ 
+diff --git a/pricing/pricing.go b/pricing/pricing.go
+index c095859..39af76b 100644
+--- a/pricing/pricing.go
++++ b/pricing/pricing.go
+@@ -8,6 +8,7 @@ import (
+ 	"fmt"
+ 	"log/slog"
+ 	"math"
++	"math/big"
+ 	"sync"
+ 	"time"
+ 
+@@ -24,9 +25,49 @@ type ModelUSD struct {
+ 	// tokens.
+ 	OutputUSDPerMTok float64
+ 
++	// CachedInputUSDPerMTok is the upstream USD price per million cached
++	// input tokens; zero means no cache discount.
++	CachedInputUSDPerMTok float64
++
+ 	// BundleTokens overrides the table-wide bundle size for this model
+ 	// when positive.
+ 	BundleTokens int64
++
++	// BundleSats, when positive, sizes the bundle at each refresh so that
++	// it quotes exactly this many satoshis. It takes precedence over
++	// BundleTokens.
++	BundleSats int64
++}
++
++// cachedPermille is the cached-input price in thousandths of the input
++// price, rounded up so the discount never sells below the upstream ratio.
++// Zero means no discount.
++func cachedPermille(m *ModelUSD) int64 {
++	if m.CachedInputUSDPerMTok <= 0 || m.InputUSDPerMTok <= 0 {
++		return 0
++	}
++	p := int64(math.Ceil(m.CachedInputUSDPerMTok / m.InputUSDPerMTok * 1000))
++
++	return min(max(p, 1), 1000)
++}
++
++// bundleTokensForSats returns the largest bundle that meterd quotes at no
++// more than bundleSats, given per-thousand-token rates. meterd prices a
++// bundle at ceil(tokens * (in + out) / 2,000,000) sats, so the result
++// quotes exactly bundleSats whenever the blended rate is below 2,000,000
++// msat per thousand tokens.
++func bundleTokensForSats(bundleSats, inPerK, outPerK int64) int64 {
++	rateSum := inPerK + outPerK
++	if bundleSats <= 0 || rateSum <= 0 {
++		return 0
++	}
++	tokens := new(big.Int).Mul(big.NewInt(bundleSats), big.NewInt(2_000_000))
++	tokens.Quo(tokens, big.NewInt(rateSum))
++	if !tokens.IsInt64() {
++		return math.MaxInt64
++	}
++
++	return max(tokens.Int64(), 1)
+ }
+ 
+ // TableConfig configures a Table.
+@@ -234,6 +275,21 @@ func (t *Table) refresh(ctx context.Context) error {
+ 			m.OutputUSDPerMTok, t.cfg.MarginPercent, btcUSD,
+ 		)
+ 
++		// Exact rates in msat per thousand tokens: meterd prefers them
++		// over the whole-msat per-token rates, so cheap models are no
++		// longer rounded up to 1 msat per token.
++		inPerK := MsatPerThousandTokens(
++			m.InputUSDPerMTok, t.cfg.MarginPercent, btcUSD,
++		)
++		outPerK := MsatPerThousandTokens(
++			m.OutputUSDPerMTok, t.cfg.MarginPercent, btcUSD,
++		)
++		if m.BundleSats > 0 {
++			bundleTokens = bundleTokensForSats(
++				m.BundleSats, inPerK, outPerK,
++			)
++		}
++
+ 		// A positive USD price that converts to zero msat means the
+ 		// conversion inputs were unusable (NaN, infinity, or a value
+ 		// beyond the int64 range). Selling below cost is worse than
+@@ -256,11 +312,18 @@ func (t *Table) refresh(ctx context.Context) error {
+ 				"overflows: %d tokens at %d msat per token",
+ 				name, bundleTokens, rateSum)
+ 		}
++		if bundleTokens <= 0 {
++			return fmt.Errorf("model %s: bundle size resolves to "+
++				"zero tokens", name)
++		}
+ 
+ 		entries[name] = &modelEntry{
+ 			rates: &meterd.ModelConfig{
+-				InputMsatPerToken:  inMsat,
+-				OutputMsatPerToken: outMsat,
++				InputMsatPerToken:           inMsat,
++				OutputMsatPerToken:          outMsat,
++				InputMsatPerThousandTokens:  inPerK,
++				OutputMsatPerThousandTokens: outPerK,
++				CachedInputPermille:         cachedPermille(m),
+ 			},
+ 			bundleTokens: bundleTokens,
+ 		}
+@@ -332,6 +395,35 @@ func (t *Table) BundleTokens(model string) int64 {
+ 	return t.cfg.BundleTokens
+ }
+ 
++// MsatPerThousandTokens converts an upstream USD-per-million-token price
++// into an exact millisatoshi price per thousand tokens, with the margin
++// applied, rounded up (at least 1 for any positive price). meterd prefers
++// these rates, so models cheaper than 1 msat per token keep their real price:
++//
++//	msat/ktok = usdPerMTok * 1e8 * (1 + margin/100) / btcUSD.
++//
++// Unusable inputs and out-of-range results return 0, as for MsatPerToken.
++func MsatPerThousandTokens(usdPerMTok, marginPercent, btcUSD float64) int64 {
++	if math.IsNaN(usdPerMTok) || math.IsInf(usdPerMTok, 0) ||
++		math.IsNaN(marginPercent) || math.IsInf(marginPercent, 0) ||
++		math.IsNaN(btcUSD) || math.IsInf(btcUSD, 0) {
++
++		return 0
++	}
++	if usdPerMTok <= 0 || btcUSD <= 0 {
++		return 0
++	}
++
++	// usd per million tokens -> msat per thousand tokens:
++	// usd/1e6 per token * 1e11/btcUSD msat per usd * 1000 tokens.
++	msat := usdPerMTok * 100_000_000 * (1 + marginPercent/100) / btcUSD
++	if math.IsNaN(msat) || msat >= float64(math.MaxInt64) || msat < 0 {
++		return 0
++	}
++
++	return max(int64(math.Ceil(msat)), 1)
++}
++
+ // MsatPerToken converts an upstream USD-per-million-token price into a
+ // millisatoshi-per-token rate at the given BTC-USD rate, with the margin
+ // applied. The result rounds up, and any positive USD price yields at least
+diff --git a/pricing/rates_test.go b/pricing/rates_test.go
+new file mode 100644
+index 0000000..830613c
+--- /dev/null
++++ b/pricing/rates_test.go
+@@ -0,0 +1,55 @@
++package pricing
++
++import "testing"
++
++func TestMsatPerThousandTokens(t *testing.T) {
++	// DeepSeek V4 Flash input, $0.13/M, 10% margin, BTC $60,000:
++	// 0.13 * 1e8 * 1.1 / 60000 = 238.33 -> 239 msat per thousand tokens.
++	if got := MsatPerThousandTokens(0.13, 10, 60000); got != 239 {
++		t.Fatalf("got %d, want 239", got)
++	}
++	if got := MsatPerThousandTokens(0, 10, 60000); got != 0 {
++		t.Fatalf("zero price must be 0, got %d", got)
++	}
++	if got := MsatPerThousandTokens(1e-9, 0, 60000); got != 1 {
++		t.Fatalf("tiny price must round up to 1, got %d", got)
++	}
++}
++
++func TestCachedPermille(t *testing.T) {
++	cases := []struct {
++		in, cached float64
++		want       int64
++	}{
++		{3, 0.3, 100}, {0.13, 0.028, 216}, {1, 0, 0}, {0, 0.1, 0}, {1, 2, 1000},
++	}
++	for _, c := range cases {
++		got := cachedPermille(&ModelUSD{InputUSDPerMTok: c.in, CachedInputUSDPerMTok: c.cached})
++		if got != c.want {
++			t.Errorf("in %v cached %v: got %d want %d", c.in, c.cached, got, c.want)
++		}
++	}
++}
++
++// meterd quotes a bundle at ceil(tokens * (in + out) / 2,000,000) sats.
++func quote(tokens, in, out int64) int64 {
++	v := tokens * (in + out)
++	return (v + 2_000_000 - 1) / 2_000_000
++}
++
++func TestBundleTokensForSats(t *testing.T) {
++	for _, r := range [][2]int64{{239, 477}, {1, 1}, {5000, 25000}, {999_999, 999_999}} {
++		for _, sats := range []int64{1, 1000, 2750, 100_000} {
++			tokens := bundleTokensForSats(sats, r[0], r[1])
++			if got := quote(tokens, r[0], r[1]); got != sats {
++				t.Errorf("rates %v, %d sats: %d tokens quote %d", r, sats, tokens, got)
++			}
++			if quote(tokens+1, r[0], r[1]) <= sats {
++				t.Errorf("rates %v, %d sats: bundle not maximal", r, sats)
++			}
++		}
++	}
++	if bundleTokensForSats(0, 1, 1) != 0 || bundleTokensForSats(10, 0, 0) != 0 {
++		t.Fatal("degenerate inputs must return 0")
++	}
++}
+diff --git a/store/sqlite.go b/store/sqlite.go
+index 554981e..cadb584 100644
+--- a/store/sqlite.go
++++ b/store/sqlite.go
+@@ -159,7 +159,10 @@ type SQLiteStore struct {
+ }
+ 
+ // A compile-time check that SQLiteStore satisfies meterd.Store.
+-var _ meterd.Store = (*SQLiteStore)(nil)
++var (
++	_ meterd.Store              = (*SQLiteStore)(nil)
++	_ meterd.ReservationExpirer = (*SQLiteStore)(nil)
++)
+ 
+ // NewSQLiteStore opens (creating when necessary) the configured database
+ // and applies the schema.
+@@ -368,8 +371,8 @@ func (s *SQLiteStore) evictOldestUnauthorizedLocked() error {
+ // to be allowed, reserves the given estimated per-request cost against its
+ // balance to bound concurrent overdraw. It returns the tokens available
+ // after existing reservations and whether the token is known.
+-func (s *SQLiteStore) Authorize(tokenID string, estimate int64) (int64, bool,
+-	error) {
++func (s *SQLiteStore) Authorize(tokenID string,
++	estimate int64) (meterd.Authorization, bool, error) {
+ 
+ 	s.mtx.Lock()
+ 	defer s.mtx.Unlock()
+@@ -385,17 +388,12 @@ func (s *SQLiteStore) Authorize(tokenID string, estimate int64) (int64, bool,
+ 	).Scan(&remaining, &authorized)
+ 	switch {
+ 	case errors.Is(err, sql.ErrNoRows):
+-		return 0, false, nil
++		return meterd.Authorization{}, false, nil
+ 
+ 	case err != nil:
+-		return 0, false, err
++		return meterd.Authorization{}, false, err
+ 	}
+ 
+-	// The available balance already nets out the tokens reserved by
+-	// other in-flight requests, so N concurrent requests on a
+-	// near-empty bundle cannot all authorize.
+-	available := remaining - s.reservedLocked(tokenID)
+-
+ 	if !authorized {
+ 		_, err := s.db.Exec(
+ 			`UPDATE bundles SET authorized = 1
+@@ -403,20 +401,35 @@ func (s *SQLiteStore) Authorize(tokenID string, estimate int64) (int64, bool,
+ 			tokenID,
+ 		)
+ 		if err != nil {
+-			return 0, false, err
++			return meterd.Authorization{}, false, err
+ 		}
+ 	}
+ 
+-	// Reserve the estimate only when the request is going to be
+-	// allowed, so a denied request does not tie up balance.
+-	if available > 0 && estimate > 0 {
++	// The available balance nets out the tokens reserved by other
++	// in-flight requests, so N concurrent requests on a near-empty bundle
++	// cannot all be admitted. meterd.AdmitReservation decides admission,
++	// and the estimate is reserved only for an admitted request.
++	reserved := s.reservedLocked(tokenID)
++	auth := meterd.Authorization{
++		Remaining: remaining,
++		Available: remaining - reserved,
++		Admitted:  meterd.AdmitReservation(remaining, reserved, estimate),
++	}
++	if auth.Admitted && estimate > 0 {
+ 		s.reserved[tokenID] = append(
+ 			s.reserved[tokenID],
+ 			reservation{amount: estimate, at: time.Now()},
+ 		)
+ 	}
+ 
+-	return available, true, nil
++	return auth, true, nil
++}
++
++// ReservationsExpire reports that reservations whose usage report never
++// arrives are dropped after maxReservationAge, so meterd may tell a buyer
++// whose funded bundle is fully reserved to retry later.
++func (s *SQLiteStore) ReservationsExpire() bool {
++	return true
+ }
+ 
+ // Get returns a copy of the token's bundle.
+diff --git a/store/sqlite_test.go b/store/sqlite_test.go
+index eb0e885..6008933 100644
+--- a/store/sqlite_test.go
++++ b/store/sqlite_test.go
+@@ -51,10 +51,10 @@ func TestBookAuthorizeDebit(t *testing.T) {
+ 	require.False(t, b.Authorized)
+ 
+ 	// Authorization reports the balance and marks the bundle used.
+-	remaining, found, err := s.Authorize("token1", 0)
++	auth, found, err := s.Authorize("token1", 0)
+ 	require.NoError(t, err)
+ 	require.True(t, found)
+-	require.EqualValues(t, 1000, remaining)
++	require.EqualValues(t, 1000, auth.Available)
+ 
+ 	b, ok = s.Get("token1")
+ 	require.True(t, ok)
+@@ -71,10 +71,10 @@ func TestBookAuthorizeDebit(t *testing.T) {
+ 	require.True(t, found)
+ 	require.EqualValues(t, 0, after.RemainingTokens)
+ 
+-	remaining, found, err = s.Authorize("token1", 0)
++	auth, found, err = s.Authorize("token1", 0)
+ 	require.NoError(t, err)
+ 	require.True(t, found)
+-	require.EqualValues(t, 0, remaining)
++	require.EqualValues(t, 0, auth.Available)
+ }
+ 
+ // TestReservations checks that authorization reservations bound concurrent
+@@ -87,17 +87,17 @@ func TestReservations(t *testing.T) {
+ 
+ 	// The first request sees the full balance and reserves its
+ 	// estimate.
+-	available, found, err := s.Authorize("token", 100)
++	auth, found, err := s.Authorize("token", 100)
+ 	require.NoError(t, err)
+ 	require.True(t, found)
+-	require.EqualValues(t, 100, available)
++	require.EqualValues(t, 100, auth.Available)
+ 
+ 	// A concurrent second request sees the balance net of the first
+ 	// reservation.
+-	available, found, err = s.Authorize("token", 100)
++	auth, found, err = s.Authorize("token", 100)
+ 	require.NoError(t, err)
+ 	require.True(t, found)
+-	require.EqualValues(t, 0, available)
++	require.EqualValues(t, 0, auth.Available)
+ 
+ 	// The report releases the reservation and debits actual usage.
+ 	after, found, err := s.Debit("token", 40, 100)
+@@ -105,9 +105,9 @@ func TestReservations(t *testing.T) {
+ 	require.True(t, found)
+ 	require.EqualValues(t, 60, after.RemainingTokens)
+ 
+-	available, _, err = s.Authorize("token", 100)
++	auth, _, err = s.Authorize("token", 100)
+ 	require.NoError(t, err)
+-	require.EqualValues(t, 60, available)
++	require.EqualValues(t, 60, auth.Available)
+ }
+ 
+ // TestReservationExpiry checks that a reservation whose usage report
+@@ -120,14 +120,14 @@ func TestReservationExpiry(t *testing.T) {
+ 	require.NoError(t, err)
+ 
+ 	// Reserve most of the bundle.
+-	available, _, err := s.Authorize("token", 900)
++	auth, _, err := s.Authorize("token", 900)
+ 	require.NoError(t, err)
+-	require.EqualValues(t, 1000, available)
++	require.EqualValues(t, 1000, auth.Available)
+ 
+ 	// A second request sees the shrunken availability.
+-	available, _, err = s.Authorize("token", 0)
++	auth, _, err = s.Authorize("token", 0)
+ 	require.NoError(t, err)
+-	require.EqualValues(t, 100, available)
++	require.EqualValues(t, 100, auth.Available)
+ 
+ 	// Backdate the first reservation past the age bound, as if its
+ 	// usage report was lost. The next authorization sees the full
+@@ -138,9 +138,9 @@ func TestReservationExpiry(t *testing.T) {
+ 	)
+ 	s.mtx.Unlock()
+ 
+-	available, _, err = s.Authorize("token", 0)
++	auth, _, err = s.Authorize("token", 0)
+ 	require.NoError(t, err)
+-	require.EqualValues(t, 1000, available)
++	require.EqualValues(t, 1000, auth.Available)
+ }
+ 
+ // TestPersistence checks that balances survive a store reopen while
