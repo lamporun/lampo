@@ -80,7 +80,7 @@ pricing:
   # on 2026-11-22 to get closer to PPQ.ai. The real margin is higher: rates
   # round up to whole msat, and cached input tokens cost us a tenth of the
   # list price while Lightmeter bills them at the full input rate.
-  marginpercent: 10
+  marginpercent: 20
   btcusd:
     # Zero = Coinbase spot, refreshed every refreshinterval.
     staticrate: 0

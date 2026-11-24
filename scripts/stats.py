@@ -55,6 +55,13 @@ CAPS = {
     "nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B": (202800, ["text"]),
 }
 SITE_MODELS = "/srv/lampo/site/models.json"
+# pi402's rate file (pi-402 src/bundle.ts, RATES_PATH): the buyer reads it to draw
+# the bundle bar and debits each response with the same formula as the meter.
+SITE_PI402 = "/srv/lampo/site/pi402.json"
+# Lampo bundles have no expiry; pi402 needs a positive lifetime for its bar.
+BUNDLE_VALID_DAYS = 365
+# Output cap advertised to pi402 (every model upstream allows at least 131k).
+MAX_OUTPUT_TOKENS = 32_768
 
 
 def write_models(models, btc_usd, updated):
@@ -77,10 +84,34 @@ def write_models(models, btc_usd, updated):
     doc = {"object": "list", "data": data, "updated_utc": updated,
            "payment": "L402 or Payment (MPP) over Lightning: one payment buys a token bundle; "
                       "GET /v1/balance shows what is left. Docs: https://lampo.run/llms.txt"}
-    tmp = SITE_MODELS + ".tmp"
+    write_json(SITE_MODELS, doc)
+
+
+def write_pi402(models, margin):
+    """<origin>/pi402.json, schema version 1, keyed by the wire model id.
+    Only the input/output ratio matters to pi402's debit; the values are the
+    upstream USD prices with our margin. cachedInputUsdPerMtok is extra: pi402
+    0.0.6 ignores it, a client that debits cached tokens can use it."""
+    doc = {"version": 1, "bundleValidDays": BUNDLE_VALID_DAYS, "marginPercent": margin, "models": {}}
+    for m in models:
+        entry = {"bundleTokens": m["bundle_tokens"],
+                 "inputUsdPerMtok": m["input_usd_per_mtok"], "outputUsdPerMtok": m["output_usd_per_mtok"]}
+        if m.get("cached_input_usd_per_mtok"):
+            entry["cachedInputUsdPerMtok"] = m["cached_input_usd_per_mtok"]
+        ctx, inputs = CAPS.get(m["slug"], (None, ["text"]))
+        if ctx:
+            entry["contextTokens"] = ctx
+        # Menu fields (pi-402 model catalog): shown in Pi's model picker.
+        entry.update({"name": m["name"], "input": inputs, "reasoning": True, "maxTokens": MAX_OUTPUT_TOKENS})
+        doc["models"][m["slug"]] = entry
+    write_json(SITE_PI402, doc)
+
+
+def write_json(path, doc):
+    tmp = path + ".tmp"
     with open(tmp, "w") as f:
         json.dump(doc, f, indent=1)
-    os.replace(tmp, SITE_MODELS)
+    os.replace(tmp, path)
 
 
 def read_env(path):
@@ -144,6 +175,9 @@ def prices(cfg, btc_usd):
             "bundle_tokens": bundle,
             "bundle_sats": -(-bundle * (kin + kout) // 2_000_000),
             "sats_per_million_tokens": math.ceil((kin + kout) / 2),
+            "input_usd_per_mtok": round(in_usd * (1 + margin / 100), 6),
+            "output_usd_per_mtok": round(out_usd * (1 + margin / 100), 6),
+            "cached_input_usd_per_mtok": round(cin_usd * (1 + margin / 100), 6) if cin_usd > 0 else None,
         })
     return sorted(out, key=lambda p: p["sats_per_million_tokens"])
 
@@ -356,6 +390,7 @@ def main():
         json.dump(stats, f, indent=1)
     os.replace(tmp, SITE_STATS)
     write_models(stats["models"], stats["btc_usd"], stats["updated_utc"])
+    write_pi402(stats["models"], stats.get("margin_percent") or 0)
     print(f"stats ok: {stats['totals']['paid_bundles']} paid bundles, {recorded} new ledger rows")
 
     if "--daily-report" in sys.argv:

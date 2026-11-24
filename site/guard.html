@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>nwc-guard · Lampo</title>
+<meta name="description" content="A spending firewall between your AI agent and your Lightning wallet: payee rules, budgets, rate limits and approval on Telegram. Open source, hosted beta coming.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+:root{--bg:#0b0d10;--card:#13171c;--ink:#e8eaed;--muted:#9aa3ad;--line:#232a31;--accent:#f7b500;--code:#0f1317}
+@media (prefers-color-scheme: light){:root{--bg:#fafaf7;--card:#ffffff;--ink:#16191d;--muted:#5d6670;--line:#e3e5e8;--accent:#b37f00;--code:#f3f4f2}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:760px;margin:0 auto;padding:40px 20px 64px}a{color:var(--accent)}h1{margin:0 0 8px;line-height:1.25}h2{font-size:1.15rem;margin:34px 0 10px}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:24px}.top a{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none;font-weight:700}.top img{border-radius:8px}
+.lead{font-size:1.1rem;color:var(--muted);margin:0 0 20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px}
+.cta{display:inline-block;font:600 15px system-ui,sans-serif;padding:10px 16px;border-radius:8px;background:var(--accent);color:#111;text-decoration:none;margin-top:6px}
+pre{background:var(--code);border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow-x:auto;font:13.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+ol li,ul li{margin:6px 0}.muted{color:var(--muted);font-size:.92rem}
+footer{border-top:1px solid var(--line);margin-top:44px;padding-top:16px;color:var(--muted);font-size:.9rem}
+</style>
+</head>
+<body><main>
+<div class="top"><a href="/"><img src="/logo.svg" alt="" width="32" height="32"><span>Lampo</span></a></div>
+
+<h1>nwc-guard: a spending firewall for your agent's wallet</h1>
+<p class="lead">Agents are getting Lightning wallets. One poisoned web page, email or tool result can tell an agent to pay an attacker. nwc-guard sits between the agent and your wallet, and nothing new gets paid without your ✅.</p>
+
+<section class="card" id="beta">
+  <b>Hosted beta: coming soon.</b> Nothing to install or keep online. Your agent gets a guarded connection, and you approve payments from Telegram.
+  <br><a class="cta" href="https://t.me/LampoGuard_bot?start=beta">Join the waitlist on Telegram</a>
+  <p class="muted" style="margin:10px 0 0">Open the bot and send <b>/beta</b>. We'll write to you there when your spot opens.</p>
+</section>
+
+<h2>What it checks, on every payment</h2>
+<ul>
+  <li><b>Who gets paid.</b> The payee is recovered from the invoice signature, and a payee you haven't approved waits for you.</li>
+  <li><b>How much.</b> A cap per payment, plus hourly and daily budgets that count fees and payments still in flight.</li>
+  <li><b>How often.</b> At most N payments a minute, so a drain made of many small payments stops early.</li>
+  <li><b>Never twice.</b> The same invoice is never paid again, even after a wallet timeout.</li>
+  <li><b>Only what's needed.</b> The agent sees its own payments and what it may still spend today. Keysend, signing and hold invoices are blocked.</li>
+  <li><b>A stop button.</b> /stop on Telegram pauses everything.</li>
+</ul>
+
+<h2>Run it yourself today</h2>
+<p>The open-source version (MIT) runs on any machine with Node.js:</p>
+<pre>npx github:lamporun/nwc-guard init --name my-agent
+NWC_UPSTREAM_URL="nostr+walletconnect://..." npx github:lamporun/nwc-guard start</pre>
+<p>Setup, rules and Telegram approvals: <a href="https://github.com/lamporun/nwc-guard">github.com/lamporun/nwc-guard</a>. It works with any NWC wallet and any NWC app: MCP servers, OpenClaw skills, <a href="https://github.com/lamporun/l402-bridge">l402-bridge</a>.</p>
+
+<h2>Tested on mainnet</h2>
+<p>On 24 November 2026 nwc-guard sat between l402-bridge and a Minibits wallet, buying AI inference from Lampo. The first bundle waited for approval on Telegram and was paid after ✅. A bundle over the limit was refused without asking, and nothing was paid.</p>
+
+<p class="muted">Privacy: the waitlist keeps your Telegram chat id, username and first name, only to write to you about the beta. Send /leave to the bot to be removed. See the <a href="/privacy.html">privacy notice</a>.</p>
+
+<footer><a href="/">Lampo</a> · <a href="/partners.html">Partners</a> · <a href="https://github.com/lamporun/nwc-guard">GitHub</a> · <a href="/privacy.html">Privacy</a> · <a href="mailto:contact@lampo.run">contact@lampo.run</a></footer>
+</main>
+</body>
+</html>

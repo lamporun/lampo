@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Partners · Lampo</title>
+<meta name="description" content="Earn 10% of every bundle bought through your Lampo link, forever, paid in sats to your Lightning address. No account, no email.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+:root{--bg:#0b0d10;--card:#13171c;--ink:#e8eaed;--muted:#9aa3ad;--line:#232a31;--accent:#f7b500;--ok:#2fbf71;--bad:#e5534b;--code:#0f1317}
+@media (prefers-color-scheme: light){:root{--bg:#fafaf7;--card:#ffffff;--ink:#16191d;--muted:#5d6670;--line:#e3e5e8;--accent:#b37f00;--code:#f3f4f2}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:760px;margin:0 auto;padding:40px 20px 64px}a{color:var(--accent)}h1{margin:0 0 8px;line-height:1.25}h2{font-size:1.15rem;margin:34px 0 10px}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:24px}.top a{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none;font-weight:700}.top img{border-radius:8px}
+.lead{font-size:1.1rem;color:var(--muted);margin:0 0 20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px}
+form{display:flex;gap:10px;flex-wrap:wrap}input{flex:1 1 260px;min-width:0;font:inherit;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+button{font:600 15px system-ui,sans-serif;padding:10px 16px;border-radius:8px;border:0;background:var(--accent);color:#111;cursor:pointer}
+button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);padding:6px 10px;font-size:13px}
+button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.msg{min-height:1.4em;margin:10px 0 0;font-size:.95rem}.err{color:var(--bad)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:14px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}.stat b{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums}.stat span{color:var(--muted);font-size:.88rem}
+.link{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}.link code{flex:1 1 260px;min-width:0;overflow-x:auto;white-space:nowrap}
+code{font:14px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--code);border:1px solid var(--line);border-radius:6px;padding:6px 8px;display:inline-block}
+pre{background:var(--code);border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow-x:auto;font:13.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+ol li,ul li{margin:6px 0}.muted{color:var(--muted);font-size:.92rem}
+footer{border-top:1px solid var(--line);margin-top:44px;padding-top:16px;color:var(--muted);font-size:.9rem}
+</style>
+</head>
+<body><main>
+<div class="top"><a href="/"><img src="/logo.svg" alt="" width="32" height="32"><span>Lampo</span></a></div>
+
+<h1>Earn 10% of every bundle, forever, in sats</h1>
+<p class="lead">Bring agents, tools or people to Lampo with your link. Each bundle bought through it pays you 10% of its price, sent to your Lightning address. No account, no email, no end date.</p>
+
+<section id="signup" class="card">
+  <form id="form" novalidate>
+    <label for="address" class="muted" style="flex-basis:100%">Your Lightning address (where we send your earnings)</label>
+    <input id="address" name="address" type="text" inputmode="email" autocomplete="off" spellcheck="false" placeholder="you@your-wallet.com" required>
+    <button type="submit" id="go">Get my link</button>
+  </form>
+  <p class="msg" id="msg" role="status"></p>
+</section>
+
+<section id="dashboard" hidden>
+  <h2>Your partner link</h2>
+  <div class="card">
+    <div class="link"><code id="link"></code><button type="button" class="ghost" id="copy">Copy</button></div>
+    <p class="muted" style="margin:10px 0 0">Earnings go to <span id="addr"></span>. Keep this page: <a id="dash" href="#">your dashboard</a> shows your numbers any time.</p>
+  </div>
+  <div class="grid">
+    <div class="stat"><b id="s-bundles">0</b><span>bundles bought through your link</span></div>
+    <div class="stat"><b id="s-earned">0</b><span>sats earned</span></div>
+    <div class="stat"><b id="s-paid">0</b><span>sats paid to you</span></div>
+    <div class="stat"><b id="s-owed">0</b><span>sats owed (paid from 1,000)</span></div>
+  </div>
+</section>
+
+<h2>How it works</h2>
+<ol>
+  <li>Enter your Lightning address and get your link: <code>https://lampo.run/r/&lt;code&gt;/v1</code>.</li>
+  <li>Use it wherever an OpenAI base URL goes: in your agent, your integration, your tutorial, your OpenClaw config or your MCP server's default.</li>
+  <li>Each bundle bought through it credits you 10% of its price: 100 sats for a 1,000-sat bundle, 300 for a 3,000-sat one.</li>
+  <li>Once you're owed 1,000 sats or more, we send them to your Lightning address automatically, within minutes. We pay the routing fee.</li>
+</ol>
+
+<h2>Where the link goes</h2>
+<pre>
+# Any OpenAI-compatible client
+base_url = "https://lampo.run/r/&lt;code&gt;/v1"
+
+# pi402 (Pi coding agent)
+export L402_PROXY_URL=https://lampo.run/r/&lt;code&gt;/v1
+
+# l402-bridge (OpenClaw, Aider, Cline, Open WebUI…)
+npx github:lamporun/l402-bridge --seller https://lampo.run/r/&lt;code&gt;/v1</pre>
+<p class="muted">The link works exactly like <code>https://lampo.run/v1</code>: same models, same prices, same bundles. The buyer pays nothing extra.</p>
+
+<h2 id="terms">Partner terms</h2>
+<ul>
+  <li><b>Commission.</b> 10% of the price of every bundle paid through your link, with no end date. Only paid bundles count. Lampo's own test purchases never count.</li>
+  <li><b>Payouts.</b> Sent to your Lightning address once you're owed at least 1,000 sats, the smallest payment our wallet can send. If a payout fails, we try again a few hours later. If its outcome is unclear, we check it by hand before paying anything else.</li>
+  <li><b>Your own link.</b> You may buy through your own link. It works as a 10% discount.</li>
+  <li><b>Fair play.</b> No spam. No misleading claims about Lampo or its models. Don't present yourself as Lampo, and don't run paid ads on the Lampo name. We may suspend a link that breaks these rules. Commission already earned through legitimate purchases is still paid.</li>
+  <li><b>Changes.</b> We may change these terms or end the program with 30 days' notice on this page. Commission earned until then is paid.</li>
+  <li><b>Taxes.</b> You are responsible for any taxes on your earnings.</li>
+  <li><b>Privacy.</b> We store your Lightning address to pay you, and show it masked on your dashboard. Requests through partner links are logged without IP addresses or headers, only so we can match purchases to your link. See the <a href="/privacy.html">privacy notice</a>.</li>
+</ul>
+
+<footer><a href="/">Lampo</a> · <a href="/guides/">Guides</a> · <a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="mailto:contact@lampo.run">contact@lampo.run</a></footer>
+</main>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var fmt = function (n) { return Number(n || 0).toLocaleString('en-US'); };
+  function show(view) {
+    $('dashboard').hidden = false;
+    $('link').textContent = view.link;
+    $('addr').textContent = view.lightning_address;
+    $('dash').href = '/r/' + view.code;
+    $('s-bundles').textContent = fmt(view.referred_bundles);
+    $('s-earned').textContent = fmt(view.earned_sats);
+    $('s-paid').textContent = fmt(view.paid_sats);
+    $('s-owed').textContent = fmt(view.owed_sats);
+    try { history.replaceState(null, '', '/partners.html?code=' + view.code); } catch (e) {}
+  }
+  function load(code) {
+    fetch('/v1/partners/' + encodeURIComponent(code), { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+      .then(show)
+      .catch(function () { $('msg').textContent = 'No partner with that code.'; $('msg').className = 'msg err'; });
+  }
+  var code = new URLSearchParams(location.search).get('code');
+  if (code && /^[a-z2-7]{8}$/.test(code)) { load(code); }
+
+  $('form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var address = $('address').value.trim();
+    $('msg').className = 'msg';
+    if (!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(address)) {
+      $('msg').textContent = 'Enter a Lightning address, like you@your-wallet.com.';
+      $('msg').className = 'msg err';
+      return;
+    }
+    $('go').disabled = true;
+    $('msg').textContent = 'Checking your address…';
+    fetch('/v1/partners', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ lightning_address: address }) })
+      .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); })
+      .then(function (res) {
+        if (!res.ok) { throw new Error(res.body.error || 'Something went wrong.'); }
+        $('msg').textContent = 'Your link is ready.';
+        show(res.body);
+      })
+      .catch(function (e) { $('msg').textContent = e.message; $('msg').className = 'msg err'; })
+      .finally(function () { $('go').disabled = false; });
+  });
+
+  $('copy').addEventListener('click', function () {
+    var text = $('link').textContent;
+    var done = function () { $('copy').textContent = 'Copied'; setTimeout(function () { $('copy').textContent = 'Copy'; }, 1500); };
+    if (navigator.clipboard) { navigator.clipboard.writeText(text).then(done, function () {}); }
+  });
+})();
+</script>
+</body>
+</html>

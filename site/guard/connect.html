@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex">
+<title>Connect your wallet · nwc-guard</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+:root{--bg:#0b0d10;--card:#13171c;--ink:#e8eaed;--muted:#9aa3ad;--line:#232a31;--accent:#f7b500;--bad:#e5534b;--ok:#2fbf71;--code:#0f1317}
+@media (prefers-color-scheme: light){:root{--bg:#fafaf7;--card:#ffffff;--ink:#16191d;--muted:#5d6670;--line:#e3e5e8;--accent:#b37f00;--code:#f3f4f2}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:680px;margin:0 auto;padding:40px 20px 64px}a{color:var(--accent)}h1{margin:0 0 8px;line-height:1.25}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:24px}.top a{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none;font-weight:700}.top img{border-radius:8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;gap:12px}
+label{font-weight:600}textarea{width:100%;min-height:96px;font:14px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);resize:vertical}
+button{font:600 15px system-ui,sans-serif;padding:10px 16px;border-radius:8px;border:0;background:var(--accent);color:#111;cursor:pointer;justify-self:start}
+button:disabled{opacity:.6}button:focus-visible,textarea:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.msg{min-height:1.4em;margin:0}.err{color:var(--bad)}.okc{color:var(--ok)}
+.out{word-break:break-all;font:13.5px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:var(--code);border:1px solid var(--line);border-radius:8px;padding:10px}
+ul{margin:0;padding-left:1.2em}li{margin:4px 0}.muted{color:var(--muted);font-size:.92rem}
+</style>
+</head>
+<body><main>
+<div class="top"><a href="/guard.html"><img src="/logo.svg" alt="" width="32" height="32"><span>nwc-guard</span></a></div>
+<h1>Connect your wallet</h1>
+<p class="muted">This page came from your chat with @LampoGuard_bot. The link works once, for 10 minutes.</p>
+
+<section class="card" id="form-card">
+  <div>
+    <b>Before you paste:</b>
+    <ul class="muted">
+      <li>In your wallet, create a new <b>Nostr Wallet Connect</b> connection just for the guard, with permission to pay invoices.</li>
+      <li>If your wallet lets you, give it a <b>budget</b> (for example 10,000 sats a month). The guard's own limits apply on top.</li>
+    </ul>
+  </div>
+  <label for="upstream">Your wallet's NWC string</label>
+  <textarea id="upstream" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="nostr+walletconnect://..."></textarea>
+  <button type="button" id="go">Connect</button>
+  <p class="msg" id="msg" role="status"></p>
+</section>
+
+<section class="card" id="done" hidden>
+  <p class="msg okc"><b>✅ Connected.</b> Give your agent this NWC string instead of your wallet's:</p>
+  <div class="out" id="agent"></div>
+  <button type="button" id="copy">Copy</button>
+  <ul class="muted">
+    <li><b>It is shown only once.</b> Copy it now. If you lose it, send /disconnect and then /connect to the bot.</li>
+    <li>Keep it secret: whoever has it can ask the guard to pay, within your limits.</li>
+    <li>Approvals, limits and /stop are in your chat with @LampoGuard_bot.</li>
+  </ul>
+</section>
+</main>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var token = (location.hash.match(/t=([A-Za-z0-9_-]{20,})/) || [])[1] || '';
+  // Keep the token out of the address bar and history.
+  try { history.replaceState(null, '', location.pathname); } catch (e) {}
+  if (!token) {
+    $('msg').textContent = 'This link is incomplete. Send /connect to @LampoGuard_bot for a new one.';
+    $('msg').className = 'msg err';
+    $('go').disabled = true;
+  }
+  $('go').addEventListener('click', function () {
+    var upstream = $('upstream').value.trim();
+    $('msg').className = 'msg';
+    if (!/^nostr\+walletconnect:\/\//i.test(upstream)) {
+      $('msg').textContent = 'Paste the string that starts with nostr+walletconnect://';
+      $('msg').className = 'msg err';
+      return;
+    }
+    $('go').disabled = true;
+    $('msg').textContent = 'Checking your wallet… this can take up to 20 seconds.';
+    fetch('/guard/api/connect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: token, upstream: upstream }) })
+      .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); })
+      .then(function (res) {
+        if (!res.ok) { throw new Error(res.body.error || 'Something went wrong.'); }
+        $('upstream').value = '';
+        $('form-card').hidden = true;
+        $('done').hidden = false;
+        $('agent').textContent = res.body.agent_url;
+      })
+      .catch(function (e) { $('msg').textContent = e.message; $('msg').className = 'msg err'; $('go').disabled = !token; });
+  });
+  $('copy').addEventListener('click', function () {
+    var t = $('agent').textContent;
+    if (navigator.clipboard) { navigator.clipboard.writeText(t).then(function () { $('copy').textContent = 'Copied'; }, function () {}); }
+  });
+})();
+</script>
+</body>
+</html>

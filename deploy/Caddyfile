@@ -1,6 +1,7 @@
 # Lampo - public entry point. Template rendered by deploy/setup.sh.
 # Caddy gets the TLS certificate from Let's Encrypt by itself.
-# No access log is written: we do not keep IP addresses or requests.
+# No general access log is written: we do not keep IP addresses or requests.
+# The only log is the partner-link log below, without IPs or request headers.
 
 @DOMAIN@ {
 	header {
@@ -12,6 +13,52 @@
 		# The site has inline script and style, and only talks to itself.
 		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
 		-Server
+	}
+
+	# Partner links: /r/<code>/v1/... is the API with a partner's code in
+	# front. The code is stripped here, and only these requests are logged,
+	# to a file of their own without IP addresses or request headers, so the
+	# worker can match the 402 challenges they receive to the bundles bought
+	# with them (scripts/partners_worker.py).
+	@partner path_regexp partner ^/r/([a-z2-7]{8})(/v1/.*)$
+	log_append @partner partner_code {re.partner.1}
+	@not_partner not path_regexp ^/r/[a-z2-7]{8}/v1/
+	log_skip @not_partner
+	rewrite @partner {re.partner.2}
+	log partners {
+		output file /var/log/caddy/lampo-partners.log {
+			roll_size 10MiB
+			roll_keep 5
+			mode 0644
+		}
+		format filter {
+			wrap json
+			fields {
+				request>remote_ip delete
+				request>remote_port delete
+				request>client_ip delete
+				request>headers delete
+				request>tls delete
+				user_id delete
+			}
+		}
+	}
+
+	# A partner's dashboard: @DOMAIN@/r/<code>
+	@partner_page path_regexp page ^/r/([a-z2-7]{8})/?$
+	redir @partner_page /partners.html?code={re.page.1}
+
+	# Hosted nwc-guard: the connect endpoint (guard-cloud, its own sandboxed service).
+	handle /guard/api/* {
+		request_body {
+			max_size 8KB
+		}
+		reverse_proxy 127.0.0.1:10040
+	}
+
+	# Partner program API: sign-up and public stats.
+	handle /v1/partners* {
+		reverse_proxy 127.0.0.1:10032
 	}
 
 	# OpenAI-style model list, served as a static file.

@@ -124,7 +124,7 @@ id lampo >/dev/null 2>&1 || useradd --system --home-dir /var/lib/lampo --create-
   --shell /usr/sbin/nologin lampo
 WAVED_DIR="/var/lib/lampo/waved-$NETWORK"
 for d in /var/lib/lampo /var/lib/lampo/aperture /var/lib/lampo/lightmeter \
-         /var/lib/lampo/ledger "$WAVED_DIR"; do
+         /var/lib/lampo/ledger /var/lib/lampo/partners /var/lib/lampo/guard "$WAVED_DIR"; do
   install -d -o lampo -g lampo -m 750 "$d"
 done
 install -d -o root -g lampo -m 750 /etc/lampo
@@ -140,6 +140,11 @@ umask 027
 [ -f /etc/lampo/sweep.env ] || printf 'SWEEP_ENABLED=0\nSWEEP_LN_ADDRESS=\nSWEEP_THRESHOLD_SAT=150000\nSWEEP_KEEP_SAT=20000\n' \
   > /etc/lampo/sweep.env
 [ -f /etc/lampo/launch.env ] || printf 'LAUNCH_TS=0\n' > /etc/lampo/launch.env
+# Partner program: commission on bundles bought through partner links, paid
+# out to the partner's Lightning address (scripts/partners_*.py).
+[ -f /etc/lampo/guardbot.env ] || printf 'GUARDBOT_TOKEN=\nGUARDBOT_OPERATOR_CHAT=\n' > /etc/lampo/guardbot.env
+[ -f /etc/lampo/partners.env ] || printf 'PARTNER_COMMISSION_PERCENT=10\nPARTNER_PAYOUT_THRESHOLD_SAT=1000\nPARTNER_DAILY_PAYOUT_CAP_SAT=20000\nPARTNER_PAYOUTS_ENABLED=1\n' \
+  > /etc/lampo/partners.env
 printf 'LAMPO_NETWORK=%s\nWAVED_DIR=%s\nDOMAIN=%s\n' "$NETWORK" "$WAVED_DIR" "$DOMAIN" \
   > /etc/lampo/network.env
 umask 022
@@ -182,7 +187,8 @@ systemctl enable --now waved.service lightmeterd.service caddy.service
 systemctl restart waved.service lightmeterd.service caddy.service
 systemctl enable --now lampo-stats.timer lampo-sweep.timer lampo-daily.timer lampo-geoblock.timer lampo-watch.timer lampo-health.timer
 systemctl enable lampo-geoblock.service
-systemctl enable --now lampo-tgbot.service lampo-balance.service
+systemctl enable --now lampo-tgbot.service lampo-balance.service lampo-partners.service lampo-partners-worker.timer
+grep -q '^GUARDBOT_TOKEN=.\+' /etc/lampo/guardbot.env && systemctl enable --now lampo-guardbot.service
 systemctl start lampo-geoblock.service || echo "Warning: geoblock failed, see journalctl -u lampo-geoblock"
 
 if [ -f "$WAVED_DIR/aperture-recv.macaroon" ]; then

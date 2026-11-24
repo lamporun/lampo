@@ -1,0 +1,19 @@
+[Unit]
+Description=Lampo - partner program API (/v1/partners: sign-up and public stats)
+After=network.target
+
+[Service]
+User=lampo
+Group=lampo
+EnvironmentFile=/etc/lampo/partners.env
+ExecStart=/usr/bin/python3 /opt/lampo/bin/partners_api.py
+Restart=always
+RestartSec=5
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/var/lib/lampo/partners
+
+[Install]
+WantedBy=multi-user.target

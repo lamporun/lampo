@@ -1,0 +1,15 @@
+[Unit]
+Description=Lampo - partner program: attribute bundles, credit commissions, pay partners
+After=network-online.target waved.service lightmeterd.service
+
+[Service]
+Type=oneshot
+User=lampo
+Group=lampo
+EnvironmentFile=/etc/lampo/partners.env
+ExecStart=/usr/bin/python3 /opt/lampo/bin/partners_worker.py
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/var/lib/lampo

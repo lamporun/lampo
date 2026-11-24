@@ -1,0 +1,19 @@
+[Unit]
+Description=Lampo - @LampoGuard_bot (hosted nwc-guard: beta waitlist)
+After=network-online.target
+
+[Service]
+User=lampo
+Group=lampo
+EnvironmentFile=/etc/lampo/guardbot.env
+ExecStart=/usr/bin/python3 /opt/lampo/bin/guard_waitlist_bot.py
+Restart=always
+RestartSec=10
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/var/lib/lampo/guard
+
+[Install]
+WantedBy=multi-user.target

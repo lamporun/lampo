@@ -93,6 +93,17 @@ pi
 /model pi402/deepseek-v4-flash # or pi402/glm-5.2, pi402/kimi-k3.1-pro, pi402/kimi-k3</code></pre>
   <p class="note">On mainnet the pi402 wallet needs your own password and a seed you back up; see the <a href="https://github.com/lightninglabs/pi-402/blob/main/INSTALL.md">pi-402 install guide</a>. DeepSeek V4 Flash bundles fit pi402's default limits, so it works without raising <code>PI402_MAX_SAT_PER_REQUEST</code>. Keep at least 2,000 sats in the wallet: after a payment the Wavelength wallet must keep either zero or at least 1,000 sats of change.</p>
 
+  <h2 id="bridge">From OpenClaw, Aider, Cline or any OpenAI-compatible tool</h2>
+  <p>Run <a href="https://github.com/lamporun/l402-bridge">l402-bridge</a>, our open-source local proxy. Your tool talks to it like any OpenAI provider, and it pays Lampo's invoices from any wallet with Nostr Wallet Connect (for example Minibits or Alby Hub), within the limits you set.</p>
+<pre><code>export NWC_URL="nostr+walletconnect://..."   # a wallet connection with a small budget
+npx github:lamporun/l402-bridge
+
+# then, in your tool:
+#   base URL  http://127.0.0.1:8402/v1
+#   API key   any value
+#   model     deepseek-ai/DeepSeek-V4-Flash-0731</code></pre>
+  <p class="note">The first request buys a bundle and the next ones reuse it. Default limits: 1,000 sats per payment and 10,000 per day; Kimi bundles need <code>--max-sats-per-payment 3000</code>. Setup for OpenClaw, Aider, Cline, Open WebUI and your own code is in the <a href="https://github.com/lamporun/l402-bridge#tools">README</a>. The bridge works with any L402 seller, not only Lampo. To approve payments from your phone and block unknown payees, put <a href="/guard.html">nwc-guard</a> between the bridge and your wallet (hosted beta coming: <a href="https://t.me/LampoGuard_bot?start=beta">join the waitlist</a>).</p>
+
   <h2>Models and prices</h2>
   <p>One payment buys a bundle of tokens; each request is debited by the tokens it actually uses, input and output at their own rates. Bundles have a fixed price in sats; how many tokens they hold follows the bitcoin price, and rates include our <span id="margin">10%</span> margin over the upstream provider. Cached input tokens (the long context an agent resends) are debited at the provider's cache price: a tenth of the input price for Kimi, GLM 5.2/5.3 and DeepSeek V4 Pro, about a fifth for the Flash models and Nemotron. Models without a pi402 name are sold to <a href="#plain">plain L402 clients</a> for now.</p>
   <table>
@@ -112,7 +123,7 @@ pi
   <h2 id="mcp">From Claude, Cursor or any MCP client</h2>
   <p>Let your assistant call Kimi, GLM or DeepSeek and pay in sats, through the <code>fetch_l402</code> tool of <a href="https://github.com/getAlby/mcp">Alby's MCP server</a>. Lampo's 402 responses work with Alby's L402 client.</p>
   <ol>
-    <li>In a Lightning wallet that supports Nostr Wallet Connect (for example Alby Hub or Coinos), create a connection with a small budget, such as 5,000 sats. Keep the connection string secret: it can spend up to that budget.</li>
+    <li>In a Lightning wallet that supports Nostr Wallet Connect (for example Alby Hub or Minibits), create a connection with a small budget, such as 5,000 sats. Keep the connection string secret: it can spend up to that budget.</li>
     <li>Add the MCP server, running locally. Claude Desktop (<code>claude_desktop_config.json</code>):
 <pre><code>{"mcpServers": {"alby": {"command": "npx", "args": ["-y", "@getalby/mcp"],
   "env": {"NWC_CONNECTION_STRING": "nostr+walletconnect://..."}}}}</code></pre>
@@ -123,7 +134,7 @@ pi
   <h2>How it works</h2>
   <ol>
     <li>Your agent sends a normal OpenAI-style request. Lampo answers <code>402 Payment Required</code> with a Lightning invoice for one bundle.</li>
-    <li>The pi402 wallet pays it within your spending limits and retries with the proof of payment.</li>
+    <li>Your wallet pays it within your spending limits (through pi402, l402-bridge or any L402 client) and the request is retried with the proof of payment.</li>
     <li>The response streams back. The same credential keeps working until the bundle is used up.</li>
   </ol>
 
@@ -143,6 +154,9 @@ curl https://lampo.run/v1/chat/completions \
   -H "Authorization: L402 $MACAROON:$PREIMAGE" \
   -d '{"model":"deepseek-ai/DeepSeek-V4-Flash-0731","stream":true,"messages":[{"role":"user","content":"hi"}]}'</code></pre>
 
+  <h2 id="partners">Earn 10% of every bundle you bring</h2>
+  <p>Built an agent, an integration or a tutorial? Get a <a href="/partners.html">partner link</a> with your Lightning address. Every bundle bought through it pays you 10% of its price, forever, sent to you in sats once you're owed 1,000. No account, no email.</p>
+
   <h2>Our commitments</h2>
   <ul>
     <li><b>Fair for agents.</b> Cached input tokens are billed at the provider's cache price, not as fresh input: long agent sessions cost a fraction.</li>
@@ -155,7 +169,7 @@ curl https://lampo.run/v1/chat/completions \
 
   <h2>Questions</h2>
   <details><summary>Who runs Lampo?</summary><p>An independent operator in Italy (details in the <a href="/terms.html">terms</a>). The whole setup is open source: <a href="https://github.com/lamporun/lampo">github.com/lamporun/lampo</a>. Lampo is not affiliated with Lightning Labs, Baseten or the model makers.</p></details>
-  <details><summary>How much is 1,000 sats?</summary><p>Around $0.60 at today's bitcoin price, and it buys about 2.8 million tokens of DeepSeek V4 Flash. Bundle prices in sats are fixed; the number of tokens follows the bitcoin price and is recalculated every 10 minutes, so the table above is always current.</p></details>
+  <details><summary>How much is 1,000 sats?</summary><p>Around $0.60 at today's bitcoin price, and it buys about 2.5 million tokens of DeepSeek V4 Flash. Bundle prices in sats are fixed; the number of tokens follows the bitcoin price and is recalculated every 10 minutes, so the table above is always current.</p></details>
   <details><summary>What if something fails after I pay?</summary><p>Your bundle is not lost: the same credential keeps working until its tokens are used up, so just retry. If something breaks on our side, write to <a href="mailto:contact@lampo.run">contact@lampo.run</a>.</p></details>
   <details><summary>Do you keep my prompts?</summary><p>No. We store only token counts and payments. The models run on Baseten's servers in the US, which process the request to answer it.</p></details>
   <details><summary>Which wallet do I need?</summary><p>For pi402, its built-in wallet: fund it from any Lightning wallet. From your own code, any Lightning wallet that gives you the payment preimage, or an L402/MPP client. Keep at least 2,000 sats in a Wavelength wallet.</p></details>
@@ -171,7 +185,7 @@ curl https://lampo.run/v1/chat/completions \
   </ul>
 
   <footer>
-    <a href="/guides/">Guides</a> · <a href="/status.html">Status</a> · <a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="mailto:contact@lampo.run">contact@lampo.run</a> · <a href="https://primal.net/p/npub1j7yzguz5g5ykrhxg57kkhutu89esmz52aknm9n0traswgwmvmlwqda8twt">Nostr</a> · <a href="https://x.com/lamporun">X</a> · <a href="https://github.com/lamporun/lampo">GitHub</a> · <a href="/v1/models">/v1/models</a> · <a href="https://pi402.tech/">pi402</a>
+    <a href="/guides/">Guides</a> · <a href="/partners.html">Partners</a> · <a href="/status.html">Status</a> · <a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="mailto:contact@lampo.run">contact@lampo.run</a> · <a href="https://primal.net/p/npub1j7yzguz5g5ykrhxg57kkhutu89esmz52aknm9n0traswgwmvmlwqda8twt">Nostr</a> · <a href="https://x.com/lamporun">X</a> · <a href="https://github.com/lamporun/lampo">GitHub</a> · <a href="/v1/models">/v1/models</a> · <a href="https://pi402.tech/">pi402</a>
     <p style="margin-top:8px">Lampo is an independent project, not affiliated with Lightning Labs, Baseten or the model providers.</p>
   </footer>
 </main>
