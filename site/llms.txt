@@ -29,6 +29,7 @@
 - [OpenAPI description](https://lampo.run/openapi.json)
 - [Using it from pi402](https://lampo.run/)
 - [l402-bridge: use it from any OpenAI-compatible tool with an NWC wallet](https://github.com/lamporun/l402-bridge)
+- [Signed usage receipts](https://lampo.run/receipts.html): every debit of a bundle has a receipt you can recompute (`GET /receipts` with your L402 credential; key at /.well-known/l402-receipts.json; spec: https://github.com/lamporun/l402-receipts/blob/main/SPEC.md)
 - [Guides](https://lampo.run/guides/): DeepSeek without a card, agents with a Lightning wallet, L402 explained
 - [Terms of use](https://lampo.run/terms.html): paying an invoice means accepting them.
 - [Privacy](https://lampo.run/privacy.html): prompts and responses are not stored.

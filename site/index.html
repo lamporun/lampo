@@ -105,7 +105,7 @@ npx github:lamporun/l402-bridge
   <p class="note">The first request buys a bundle and the next ones reuse it. Default limits: 1,000 sats per payment and 10,000 per day; Kimi bundles need <code>--max-sats-per-payment 3000</code>. Setup for OpenClaw, Aider, Cline, Open WebUI and your own code is in the <a href="https://github.com/lamporun/l402-bridge#tools">README</a>. The bridge works with any L402 seller, not only Lampo. To approve payments from your phone and block unknown payees, put <a href="/guard.html">nwc-guard</a> between the bridge and your wallet (hosted beta coming: <a href="https://t.me/LampoGuard_bot?start=beta">join the waitlist</a>).</p>
 
   <h2>Models and prices</h2>
-  <p>One payment buys a bundle of tokens; each request is debited by the tokens it actually uses, input and output at their own rates. Bundles have a fixed price in sats; how many tokens they hold follows the bitcoin price, and rates include our <span id="margin">10%</span> margin over the upstream provider. Cached input tokens (the long context an agent resends) are debited at the provider's cache price: a tenth of the input price for Kimi, GLM 5.2/5.3 and DeepSeek V4 Pro, about a fifth for the Flash models and Nemotron. Models without a pi402 name are sold to <a href="#plain">plain L402 clients</a> for now.</p>
+  <p>One payment buys a bundle of tokens; each request is debited by the tokens it actually uses, input and output at their own rates. Bundles have a fixed price in sats; how many tokens they hold follows the bitcoin price, and rates include our <span id="margin">20%</span> margin over the upstream provider. Cached input tokens (the long context an agent resends) are debited at the provider's cache price: a tenth of the input price for Kimi, GLM 5.2/5.3 and DeepSeek V4 Pro, about a fifth for the Flash models and Nemotron. Models without a pi402 name are sold to <a href="#plain">plain L402 clients</a> for now.</p>
   <table>
     <thead><tr><th>Model in pi402</th><th class="num">Bundle</th><th class="num">Bundle price</th><th class="num">Sats per 1M tokens</th></tr></thead>
     <tbody id="prices"><tr><td colspan="4" class="note">Loading current prices…</td></tr></tbody>
@@ -160,8 +160,9 @@ curl https://lampo.run/v1/chat/completions \
   <h2>Our commitments</h2>
   <ul>
     <li><b>Fair for agents.</b> Cached input tokens are billed at the provider's cache price, not as fresh input: long agent sessions cost a fraction.</li>
-    <li><b>Public, live prices.</b> Upstream list price plus 10%, recalculated every 10 minutes, in the table above and machine-readable at <a href="/v1/models">/v1/models</a>.</li>
+    <li><b>Public, live prices.</b> Upstream list price plus our 20% margin, recalculated every 10 minutes, in the table above and machine-readable at <a href="/v1/models">/v1/models</a>.</li>
     <li><b>Know what's left.</b> <code>GET /v1/balance</code> with your credential tells you, free, how many tokens remain in your bundle.</li>
+    <li><b>Don't trust our meter, verify it.</b> Every debit comes with a <a href="/receipts.html">signed receipt</a> you can recompute to the token, chained so none can go missing, and anchored every day on Nostr and in Bitcoin.</li>
     <li><b>Standard everything.</b> L402 and MPP, the OpenAI chat format, streaming, tool calling and JSON mode.</li>
     <li><b>Nothing to leak.</b> No accounts, no prompt or answer logs, no IP addresses in our logs.</li>
     <li><b>Open and accountable.</b> The whole setup is <a href="https://github.com/lamporun/lampo">open source</a>, and every incident is on the <a href="/status.html">status page</a> with what we changed.</li>

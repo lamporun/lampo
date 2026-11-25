@@ -56,6 +56,17 @@
 		reverse_proxy 127.0.0.1:10040
 	}
 
+	# Signed usage receipts (l402-receipts, its own sandboxed service): the
+	# issuer key, a bundle's receipts for the holder of its credential, and
+	# the daily anchors.
+	@receipts path /.well-known/l402-receipts.json /receipts /receipts/anchors /receipts/anchors/*
+	handle @receipts {
+		request_body {
+			max_size 1KB
+		}
+		reverse_proxy 127.0.0.1:10050
+	}
+
 	# Partner program API: sign-up and public stats.
 	handle /v1/partners* {
 		reverse_proxy 127.0.0.1:10032

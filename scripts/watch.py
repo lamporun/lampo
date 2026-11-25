@@ -22,6 +22,8 @@ WATCH = [
     {"kind": "github", "repo": "lightninglabs/pi-402", "issue": 54},       # PR: bundle bar, cached input
     {"kind": "github", "repo": "lightninglabs/pi-402", "issue": 55},       # PR: model menu from the seller (#6)
     {"kind": "github", "repo": "getAlby/awesome-nwc", "issue": 119},       # PR: list l402-bridge
+    {"kind": "github", "repo": "lightninglabs/aperture", "issue": 346},    # PR: meterd usage ledger (receipts)
+    {"kind": "github", "repo": "lightninglabs/lightmeter", "issue": 9},    # PR: sqlite usage ledger (receipts)
     {"kind": "stacker", "item": 1619024},
 ]
 UA = {"User-Agent": "lampo-watch", "Accept": "application/json"}

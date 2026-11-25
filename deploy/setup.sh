@@ -13,7 +13,13 @@ DOMAIN="${DOMAIN:-lampo.run}"
 NETWORK="${NETWORK:-signet}"            # signet | mainnet
 GO_VERSION="1.27.3"
 APERTURE_COMMIT="1f2e5a1e98adf743bc6e0765bc638d2f20c11ade"   # master, 2026-11-12
-LIGHTMETER_COMMIT="5885f3046429f66d4c4f16ad9150c18870ab05bc" # main, 2026-11-04
+# Lampo's Lightmeter: lightmeter#8 (cached and sats-priced bundles) and
+# lightmeter#9 (the usage ledger behind receipts), built against aperture#346
+# through the replace in its go.mod. Both are offered upstream.
+LIGHTMETER_REPO="https://github.com/lamporun/lightmeter.git"
+LIGHTMETER_COMMIT="3ed1dcb196a8dd3213c1a81e9f08ab6679fcef3f" # usage-ledger, 2026-11-25
+L402_RECEIPTS_COMMIT="b63c180cd50ef5c46e67630ad2514f50cfdd17a2" # main, 2026-11-25
+NODE_VERSION="v22.22.2"
 WAVELENGTH_VERSION="v0.2.1"                                   # release, 2026-10-31
 
 log() { printf '\n== %s\n' "$*"; }
@@ -85,22 +91,43 @@ log "Aperture and Lightmeter (pinned commits)"
 install -d -m 755 /opt/lampo/src /opt/lampo/bin
 fetch() {
   local dir="/opt/lampo/src/$1"
-  [ -d "$dir/.git" ] || git clone -q "https://github.com/lightninglabs/$1.git" "$dir"
+  [ -d "$dir/.git" ] || git clone -q "${3:-https://github.com/lightninglabs/$1.git}" "$dir"
   git -C "$dir" fetch -q origin
-  git -C "$dir" checkout -q --detach "$2"
+  git -C "$dir" checkout -q -f --detach "$2"
+  git -C "$dir" clean -qfd
 }
 fetch aperture "$APERTURE_COMMIT"
 (cd /opt/lampo/src/aperture && go build -trimpath -o /usr/local/bin/aperture ./cmd/aperture)
-fetch lightmeter "$LIGHTMETER_COMMIT"
-# Lampo change to Lightmeter (offered upstream): exact per-thousand-token rates
-# and cached-input pricing from aperture #345 (merged as 7d534da38), plus
-# bundles priced in sats. Lightmeter meters through aperture's meterd library,
-# so we build it against that aperture commit with our patch applied.
-LM=/opt/lampo/src/lightmeter
-git -C "$LM" checkout -q -f "$LIGHTMETER_COMMIT"
-git -C "$LM" clean -qfd
-git -C "$LM" apply "$REPO_DIR/contrib/lightmeter-fractional-cached-bundlesats.patch"
-(cd /opt/lampo/src/lightmeter && go build -trimpath -o /usr/local/bin/lightmeterd ./cmd/lightmeterd)
+fetch lightmeter-lampo "$LIGHTMETER_COMMIT" "$LIGHTMETER_REPO"
+(cd /opt/lampo/src/lightmeter-lampo && CGO_ENABLED=0 go build -trimpath -o /usr/local/bin/lightmeterd ./cmd/lightmeterd)
+
+log "Node.js $NODE_VERSION (official tarball, checked against SHASUMS256.txt)"
+if [ "$(/opt/node/current/bin/node --version 2>/dev/null)" != "$NODE_VERSION" ]; then
+  tarball="node-$NODE_VERSION-linux-x64.tar.xz"
+  curl -fsSL -o "/tmp/$tarball" "https://nodejs.org/dist/$NODE_VERSION/$tarball"
+  curl -fsSL "https://nodejs.org/dist/$NODE_VERSION/SHASUMS256.txt" | grep " $tarball\$" > /tmp/node.sha256
+  (cd /tmp && sha256sum -c node.sha256)
+  install -d -m 755 /opt/node
+  tar -C /opt/node -xJf "/tmp/$tarball"
+  ln -sfn "/opt/node/node-$NODE_VERSION-linux-x64" /opt/node/current
+  rm -f "/tmp/$tarball" /tmp/node.sha256
+fi
+
+log "l402-receipts (signed usage receipts, its own user and sandbox)"
+id receipts >/dev/null 2>&1 || useradd --system --no-create-home --home-dir /nonexistent \
+  --shell /usr/sbin/nologin --user-group receipts
+usermod -a -G lampo receipts
+fetch l402-receipts "$L402_RECEIPTS_COMMIT" "https://github.com/lamporun/l402-receipts.git"
+rsync -a --delete --exclude .git /opt/lampo/src/l402-receipts/ /opt/l402-receipts/
+(cd /opt/l402-receipts && PATH="/opt/node/current/bin:$PATH" npm ci --omit=dev --no-audit --no-fund --ignore-scripts)
+chown -R root:root /opt/l402-receipts
+install -d -m 700 -o receipts -g receipts /etc/l402-receipts
+install -d -m 755 -o receipts -g receipts /var/lib/l402-receipts /var/lib/l402-receipts/anchors
+# The signing key is made on the server and never leaves it.
+[ -f /etc/l402-receipts/key ] || sudo -u receipts env NODE_NO_WARNINGS=1 /opt/node/current/bin/node \
+  /opt/l402-receipts/bin/l402-receipts.js keygen --out /etc/l402-receipts/key
+[ -f /etc/l402-receipts/env ] || { printf 'PUBLIC_URL=https://%s\nRECEIPTS_SINCE=%s\nRELAY_ARGS=--relay wss://nos.lol --relay wss://relay.primal.net --relay wss://relay.damus.io\n' \
+  "$DOMAIN" "$(date -u +%F)" > /etc/l402-receipts/env; chown receipts:receipts /etc/l402-receipts/env; chmod 600 /etc/l402-receipts/env; }
 
 log "Wavelength $WAVELENGTH_VERSION (release binaries, checksum from the signed manifest)"
 if [ "$(cat /opt/lampo/.wavelength-version 2>/dev/null)" != "$WAVELENGTH_VERSION" ]; then
@@ -188,6 +215,7 @@ systemctl restart waved.service lightmeterd.service caddy.service
 systemctl enable --now lampo-stats.timer lampo-sweep.timer lampo-daily.timer lampo-geoblock.timer lampo-watch.timer lampo-health.timer
 systemctl enable lampo-geoblock.service
 systemctl enable --now lampo-tgbot.service lampo-balance.service lampo-partners.service lampo-partners-worker.timer
+systemctl enable --now l402-receipts.service l402-receipts-anchor.timer
 grep -q '^GUARDBOT_TOKEN=.\+' /etc/lampo/guardbot.env && systemctl enable --now lampo-guardbot.service
 systemctl start lampo-geoblock.service || echo "Warning: geoblock failed, see journalctl -u lampo-geoblock"
 

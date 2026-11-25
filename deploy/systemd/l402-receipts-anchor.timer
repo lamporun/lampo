@@ -1,0 +1,10 @@
+[Unit]
+Description=Lampo - anchor the usage receipts (new days just after midnight UTC; retries and Bitcoin upgrades hourly)
+
+[Timer]
+OnCalendar=*-*-* *:10:00 UTC
+Persistent=true
+RandomizedDelaySec=60
+
+[Install]
+WantedBy=timers.target

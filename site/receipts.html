@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verifiable billing · Lampo</title>
+<meta name="description" content="Every debit of a Lampo bundle gets a signed receipt you can recompute, chained and anchored daily on Nostr and in Bitcoin. Don't trust our meter, verify it.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+:root{--bg:#0b0d10;--card:#13171c;--ink:#e8eaed;--muted:#9aa3ad;--line:#232a31;--accent:#f7b500;--code:#0f1317}
+@media (prefers-color-scheme: light){:root{--bg:#fafaf7;--card:#ffffff;--ink:#16191d;--muted:#5d6670;--line:#e3e5e8;--accent:#b37f00;--code:#f3f4f2}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:760px;margin:0 auto;padding:40px 20px 64px}a{color:var(--accent)}h1{margin:0 0 8px;line-height:1.25}h2{font-size:1.15rem;margin:34px 0 10px}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:24px}.top a{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none;font-weight:700}.top img{border-radius:8px}
+.lead{font-size:1.1rem;color:var(--muted);margin:0 0 20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px}
+.cta{display:inline-block;font:600 15px system-ui,sans-serif;padding:10px 16px;border-radius:8px;background:var(--accent);color:#111;text-decoration:none;margin-top:6px}
+pre{background:var(--code);border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow-x:auto;font:13.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+ol li,ul li{margin:6px 0}.muted{color:var(--muted);font-size:.92rem}
+footer{border-top:1px solid var(--line);margin-top:44px;padding-top:16px;color:var(--muted);font-size:.9rem}
+</style>
+</head>
+<body><main>
+<div class="top"><a href="/"><img src="/logo.svg" alt="" width="32" height="32"><span>Lampo</span></a></div>
+
+<h1>Don't trust our meter. Verify it.</h1>
+<p class="lead">You prepay a bundle of tokens and every request draws it down. Every one of those debits now comes with a receipt signed by Lampo, and your agent can recompute each one.</p>
+
+<section class="card">
+  <b>What a receipt proves</b>
+  <ul>
+    <li><b>The debit is exact.</b> Each receipt carries the usage the model reported (prompt, cached and completion tokens), the rates and the debit. You recompute the debit to the token.</li>
+    <li><b>Nothing goes missing.</b> A bundle's receipts are a hash chain, and each balance follows from the one before. A dropped or edited receipt breaks the chain.</li>
+    <li><b>History can't be rewritten.</b> Every day we commit to all of that day's receipts with one Merkle root, signed, published on Nostr and timestamped in Bitcoin with OpenTimestamps.</li>
+    <li><b>Only you can read them.</b> Receipts are served only to whoever holds the bundle's payment preimage. The public anchors show one count and one hash per day.</li>
+  </ul>
+</section>
+
+<h2>Check your receipts</h2>
+<p>Run this with the credential your client paid with, the <code>Authorization</code> value <code>L402 &lt;macaroon&gt;:&lt;preimage&gt;</code>:</p>
+<pre>npx github:lamporun/l402-receipts verify --seller https://lampo.run \
+  --credential "L402 &lt;macaroon&gt;:&lt;preimage&gt;" --nostr</pre>
+<p>Using <a href="https://github.com/lamporun/l402-bridge">l402-bridge</a>? It already checks the receipt of every answer and logs <code>🧾 receipt 3 ✓</code>, or a warning if anything doesn't add up.</p>
+
+<h2>Where to find everything</h2>
+<ul>
+  <li>The signing key and endpoints: <a href="/.well-known/l402-receipts.json">/.well-known/l402-receipts.json</a></li>
+  <li>The daily anchors and their Bitcoin timestamps: <a href="/receipts/anchors/">/receipts/anchors/</a></li>
+  <li>The format, so anyone can verify without our code: <a href="https://github.com/lamporun/l402-receipts/blob/main/SPEC.md">SPEC.md</a></li>
+</ul>
+<p class="muted">Receipts cover every bundle bought from 25 November 2026. They hold us to the arithmetic and the history of every debit. They can't prove that the model's provider counted the tokens it reported, but our models are open-weight, so you can spot-check completion tokens with the model's public tokenizer.</p>
+
+<h2>Selling metered L402 too?</h2>
+<p><a href="https://github.com/lamporun/l402-receipts">l402-receipts</a> is open source (MIT) and works with Lightning Labs' Aperture and Lightmeter. Our changes to both are proposed upstream.</p>
+
+<footer><a href="/">Lampo</a> · <a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a></footer>
+</main></body>
+</html>

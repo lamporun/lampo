@@ -1,0 +1,38 @@
+[Unit]
+Description=Lampo - daily anchors of the usage receipts (Nostr, OpenTimestamps)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=receipts
+Group=receipts
+SupplementaryGroups=lampo
+EnvironmentFile=/etc/l402-receipts/env
+Environment=NODE_NO_WARNINGS=1
+ExecStart=/opt/node/current/bin/node /opt/l402-receipts/bin/l402-receipts.js anchor --db /var/lib/lampo/lightmeter/lightmeter.db --key /etc/l402-receipts/key --anchors /var/lib/l402-receipts/anchors --public-url ${PUBLIC_URL} --since ${RECEIPTS_SINCE} $RELAY_ARGS
+TimeoutStartSec=300
+
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+ReadWritePaths=/var/lib/l402-receipts
+InaccessiblePaths=/etc/lampo /etc/guard-cloud /var/lib/guard-cloud /root -/var/lib/lampo/aperture -/var/lib/lampo/archive-signet -/var/lib/lampo/geoblock -/var/lib/lampo/guard -/var/lib/lampo/health-alerts -/var/lib/lampo/ledger -/var/lib/lampo/partners -/var/lib/lampo/waved-mainnet -/var/lib/lampo/waved-signet
+UMask=0022

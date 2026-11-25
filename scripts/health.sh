@@ -11,7 +11,7 @@ alert_once() {  # key, message
     /opt/lampo/bin/alert.sh "$2"; touch "$f"
   fi
 }
-for s in caddy aperture lightmeterd waved lampo-tgbot lampo-balance lampo-partners guard-cloud; do
+for s in caddy aperture lightmeterd waved lampo-tgbot lampo-balance lampo-partners guard-cloud l402-receipts; do
   if ! systemctl is-active --quiet "$s"; then
     alert_once "down-$s" "Lampo: il servizio $s è fermo. Provo a riavviarlo."
     systemctl restart "$s" || true
