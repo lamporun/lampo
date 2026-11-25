@@ -18,7 +18,7 @@ APERTURE_COMMIT="1f2e5a1e98adf743bc6e0765bc638d2f20c11ade"   # master, 2026-11-1
 # through the replace in its go.mod. Both are offered upstream.
 LIGHTMETER_REPO="https://github.com/lamporun/lightmeter.git"
 LIGHTMETER_COMMIT="3ed1dcb196a8dd3213c1a81e9f08ab6679fcef3f" # usage-ledger, 2026-11-25
-L402_RECEIPTS_COMMIT="b63c180cd50ef5c46e67630ad2514f50cfdd17a2" # main, 2026-11-25
+L402_RECEIPTS_COMMIT="14c1527f8f616ace7384ba46170172f3df3e7365" # main, 2026-11-25
 NODE_VERSION="v22.22.2"
 WAVELENGTH_VERSION="v0.2.1"                                   # release, 2026-10-31
 
